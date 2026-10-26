@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Painel de análise exploratória em tempo real dos dados da API industrial do Projeto Integrador III.">
+  <title>Exploração de Dados | PI III</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f9f9f7;
+      --surface: #fcfcfb;
+      --card: #ffffff;
+      --ink: #0b0b0b;
+      --ink-2: #52514e;
+      --muted: #898781;
+      --grid: #e1e0d9;
+      --axis: #c3c2b7;
+      --border: rgba(11, 11, 11, .10);
+      --navy: #12243a;
+      --cyan: #27b7c9;
+      --accent: #2a78d6;
+      --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+      --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
+      --s-other: #898781;
+      --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+      --div-mid: #f0efec; --div-pos: #2a78d6; --div-neg: #e34948;
+      --code-bg: #f3f3f0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --page: #0d0d0d; --surface: #1a1a19; --card: #1a1a19;
+        --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+        --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, .10);
+        --navy: #10192a; --accent: #3987e5;
+        --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+        --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+        --div-mid: #383835; --div-pos: #3987e5; --div-neg: #e66767;
+        --code-bg: #232321;
+      }
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --card: #1a1a19;
+      --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, .10);
+      --navy: #10192a; --accent: #3987e5;
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+      --div-mid: #383835; --div-pos: #3987e5; --div-neg: #e66767;
+      --code-bg: #232321;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .wrap { width: min(1240px, calc(100% - 32px)); margin: 0 auto; }
+
+    .topbar { background: var(--navy); color: #fff; border-bottom: 3px solid var(--cyan); }
+    .topbar .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; }
+    .topbar h1 { margin: 0; font-size: 1.05rem; letter-spacing: .02em; }
+    .topbar h1 small { display: block; color: #c7d3e2; font-weight: 400; font-size: .8rem; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 12px; border-radius: 100px;
+      border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .07);
+      font-size: .82rem; color: #edf5ff;
+    }
+    .pill .dot { width: 9px; height: 9px; border-radius: 50%; background: #898781; }
+    .pill.ok .dot { background: var(--good); }
+    .pill.erro .dot { background: var(--critical); }
+
+    .controles {
+      display: flex; flex-wrap: wrap; align-items: end; gap: 10px;
+      padding: 14px 0;
+    }
+    .campo { display: flex; flex-direction: column; gap: 3px; }
+    .campo label { font-size: .72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+    input, select, button { font: inherit; color: var(--ink); }
+    input[type="text"], select {
+      padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--card);
+    }
+    #base-url { width: 240px; }
+    button {
+      padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); cursor: pointer;
+    }
+    button:hover { border-color: var(--accent); }
+    button.primario { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .espaco { flex: 1; }
+
+    .aviso {
+      margin: 0 0 14px; padding: 12px 14px; border-radius: 10px;
+      border-left: 4px solid var(--critical); background: var(--card); border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    }
+    .aviso.atencao { border-left-color: var(--warning); }
+    .aviso code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+    .aviso[hidden] { display: none; }
+
+    .kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+    .kpi .rotulo { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+    .kpi .valor { font-size: 1.6rem; font-weight: 700; line-height: 1.2; margin-top: 4px; }
+    .kpi .sub { font-size: .78rem; color: var(--ink-2); }
+
+    .filtros {
+      display: flex; flex-wrap: wrap; align-items: end; gap: 10px;
+      padding: 10px 14px; margin-bottom: 14px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    }
+    .filtros .nota { font-size: .8rem; color: var(--ink-2); }
+
+    .grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+    .cartao {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; min-width: 0;
+    }
+    .cartao.largo { grid-column: 1 / -1; }
+    .cartao-topo { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .cartao h2 { margin: 0; font-size: 1rem; }
+    .cartao .desc { margin: 2px 0 0; font-size: .82rem; color: var(--ink-2); max-width: 70ch; }
+    .cartao-ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+
+    .grafico { position: relative; width: 100%; }
+    .grafico svg { display: block; width: 100%; overflow: visible; }
+    .grafico text { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+    .grafico text.rotulo-direto { fill: var(--ink-2); font-size: 11.5px; }
+    .grafico text.rotulo-ref { fill: var(--ink-2); }
+    .vazio { padding: 40px 10px; text-align: center; color: var(--muted); }
+    .info-grafico { font-size: .82rem; color: var(--ink-2); margin-bottom: 6px; }
+
+    .legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 6px; font-size: .8rem; color: var(--ink-2); }
+    .legenda span { display: inline-flex; align-items: center; gap: 6px; }
+    .legenda i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+    .legenda i.ponto { width: 9px; height: 9px; border-radius: 50%; }
+
+    .tooltip {
+      position: absolute; pointer-events: none; z-index: 5;
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, .14);
+      padding: 8px 10px; font-size: .78rem; min-width: 140px; color: var(--ink);
+    }
+    .tooltip[hidden] { display: none; }
+    .tooltip .t-titulo { color: var(--ink-2); margin-bottom: 4px; }
+    .tooltip .t-linha { display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+    .tooltip .t-linha b { font-variant-numeric: tabular-nums; }
+    .tooltip i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    .tabela-wrap { overflow-x: auto; }
+    table.dados { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    table.dados th, table.dados td { padding: 7px 9px; border-bottom: 1px solid var(--grid); text-align: left; white-space: nowrap; }
+    table.dados th { color: var(--ink-2); font-weight: 600; font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; position: sticky; top: 0; background: var(--card); }
+    table.dados td.n { text-align: right; font-variant-numeric: tabular-nums; }
+    table.dados th.n { text-align: right; }
+    .rolagem { max-height: 420px; overflow: auto; }
+    .muted { color: var(--muted); }
+    .sw { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 1px 8px; border-radius: 100px; font-size: .76rem;
+      border: 1px solid var(--border); color: var(--ink);
+    }
+    .badge b { font-size: .7rem; }
+    .badge.good b { color: var(--good); }
+    .badge.warning b { color: var(--warning); }
+    .badge.serious b { color: var(--serious); }
+    .badge.critical b { color: var(--critical); }
+    .badge.neutral b { color: var(--muted); }
+    .badge.good { background: color-mix(in srgb, var(--good) 14%, transparent); }
+    .badge.warning { background: color-mix(in srgb, var(--warning) 18%, transparent); }
+    .badge.serious { background: color-mix(in srgb, var(--serious) 18%, transparent); }
+    .badge.critical { background: color-mix(in srgb, var(--critical) 16%, transparent); }
+
+    .barra-mini { position: relative; height: 6px; background: var(--grid); border-radius: 3px; width: 80px; display: inline-block; vertical-align: middle; margin-left: 6px; }
+    .barra-mini span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--s1); }
+
+    table.corr { border-collapse: separate; border-spacing: 2px; font-size: .78rem; }
+    table.corr th { font-weight: 600; color: var(--ink-2); padding: 4px 6px; white-space: nowrap; }
+    table.corr th.lin { text-align: right; }
+    table.corr td { width: 64px; height: 40px; text-align: center; border-radius: 4px; font-variant-numeric: tabular-nums; cursor: default; }
+    .escala-div { display: flex; align-items: center; gap: 8px; font-size: .76rem; color: var(--muted); margin-top: 8px; }
+    .escala-div span.g { width: 160px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--div-neg), var(--div-mid), var(--div-pos)); }
+
+    footer { color: var(--muted); font-size: .78rem; padding: 10px 0 30px; }
+
+    @media (max-width: 1000px) {
+      .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grade { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #base-url { width: 100%; }
+      .controles .campo:first-child { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <h1>Análise exploratória · API industrial<small>Projeto Integrador III — coleta e exploração em tempo real</small></h1>
+      <span class="pill" id="pill"><span class="dot"></span><span id="pill-texto">Aguardando primeira coleta…</span></span>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section class="controles" aria-label="Controles de coleta">
+      <div class="campo">
+        <label for="base-url">URL base da API</label>
+        <input type="text" id="base-url" spellcheck="false">
+      </div>
+      <div class="campo">
+        <label for="intervalo">Coletar a cada</label>
+        <select id="intervalo">
+          <option value="1">1 s</option>
+          <option value="2">2 s</option>
+          <option value="5">5 s</option>
+          <option value="10">10 s</option>
+          <option value="15">15 s</option>
+          <option value="30">30 s</option>
+        </select>
+      </div>
+      <button class="primario" id="btn-ativo" type="button">Pausar</button>
+      <button id="btn-agora" type="button">Coletar agora</button>
+      <span class="espaco"></span>
+      <button id="btn-csv" type="button">Exportar CSV</button>
+      <button id="btn-json" type="button">Exportar JSON</button>
+      <button id="btn-limpar" type="button">Limpar dados</button>
+    </section>
+
+    <div class="aviso" id="aviso-erro" hidden></div>
+    <div class="aviso atencao" id="aviso-qualidade" hidden></div>
+
+    <section class="kpis" id="kpis" aria-label="Indicadores da coleta"></section>
+
+    <section class="filtros" aria-label="Filtros da análise">
+      <div class="campo">
+        <label for="f-maquina">Máquina</label>
+        <select id="f-maquina"><option value="todas">Todas</option></select>
+      </div>
+      <div class="campo">
+        <label for="f-janela">Janela de tempo</label>
+        <select id="f-janela">
+          <option value="0">Todo o histórico</option>
+          <option value="5">Últimos 5 min</option>
+          <option value="15">Últimos 15 min</option>
+          <option value="60">Última 1 h</option>
+        </select>
+      </div>
+      <span class="nota" id="nota-filtro"></span>
+    </section>
+
+    <div class="grade">
+      <div class="cartao largo">
+        <div class="cartao-topo">
+          <div>
+            <h2>Resumo por máquina</h2>
+            <p class="desc">Quantas leituras cada máquina gerou, com que frequência e quais campos ela envia. Considera todo o histórico coletado.</p>
+          </div>
+        </div>
+        <div class="tabela-wrap" id="tab-maquinas"></div>
+      </div>
+
+      <div class="cartao largo">
+        <div class="cartao-topo">
+          <div>
+            <h2>Dicionário de dados</h2>
+            <p class="desc">Campos que a máquina envia, com tipo de dado e estatística geral. Considera todo o histórico coletado da máquina escolhida. Comportamento: <b>constante</b> (nunca muda), <b>sempre crescente</b> (contador acumulado), <b>variável</b> (sobe e desce).</p>
+          </div>
+          <div class="cartao-ctrl">
+            <div class="campo"><label for="dic-maquina">Máquina</label><select id="dic-maquina"></select></div>
+          </div>
+        </div>
+        <div class="info-grafico" id="dic-resumo"></div>
+        <div class="tabela-wrap" id="tab-dicionario"></div>
+      </div>
+
+      <div class="cartao largo">
+        <div class="cartao-topo">
+          <div>
+            <h2>Perfil dos campos</h2>
+            <p class="desc">Tipo, preenchimento e estatísticas descritivas de cada campo. “Preench. nas máquinas” considera só as máquinas que enviam o campo. Outliers pela regra 1,5 × IQR.</p>
+          </div>
+        </div>
+        <div class="tabela-wrap" id="tab-perfil"></div>
+      </div>
+
+      <div class="cartao largo">
+        <div class="cartao-topo">
+          <div>
+            <h2>Série temporal</h2>
+            <p class="desc">Evolução de um campo numérico ao longo do tempo, uma linha por máquina.</p>
+          </div>
+          <div class="cartao-ctrl">
+            <div class="campo"><label for="sel-serie">Campo</label><select id="sel-serie"></select></div>
+          </div>
+        </div>
+        <div class="grafico" id="g-serie"></div>
+        <div class="tabela-wrap" id="tab-serie" style="margin-top:12px"></div>
+      </div>
+
+      <div class="cartao">
+        <div class="cartao-topo">
+          <div>
+            <h2>Distribuição</h2>
+            <p class="desc">Histograma do campo escolhido. A linha vertical marca a mediana.</p>
+          </div>
+          <div class="cartao-ctrl">
+            <div class="campo"><label for="sel-hist">Campo</label><select id="sel-hist"></select></div>
+          </div>
+        </div>
+        <div class="grafico" id="g-hist"></div>
+      </div>
+
+      <div class="cartao">
+        <div class="cartao-topo">
+          <div>
+            <h2>Dispersão</h2>
+            <p class="desc">Relação entre dois campos, com o coeficiente de Pearson (r).</p>
+          </div>
+          <div class="cartao-ctrl">
+            <div class="campo"><label for="sel-x">Eixo X</label><select id="sel-x"></select></div>
+            <div class="campo"><label for="sel-y">Eixo Y</label><select id="sel-y"></select></div>
+          </div>
+        </div>
+        <div class="grafico" id="g-disp"></div>
+      </div>
+
+      <div class="cartao">
+        <div class="cartao-topo">
+          <div>
+            <h2>Matriz de correlação</h2>
+            <p class="desc">Pearson entre pares de campos numéricos, calculado só nas leituras que têm os dois campos. Correlação não implica causa.</p>
+          </div>
+        </div>
+        <div class="grafico tabela-wrap" id="g-corr"></div>
+      </div>
+
+      <div class="cartao">
+        <div class="cartao-topo">
+          <div>
+            <h2>Status por máquina</h2>
+            <p class="desc">Contagem de cada valor do campo <code>status</code>. A barra mostra a proporção dentro da máquina.</p>
+          </div>
+        </div>
+        <div class="tabela-wrap" id="tab-status"></div>
+      </div>
+
+      <div class="cartao largo">
+        <div class="cartao-topo">
+          <div>
+            <h2>Leituras brutas</h2>
+            <p class="desc">As 150 leituras mais recentes (respeitando os filtros), exatamente como chegaram da API.</p>
+          </div>
+        </div>
+        <div class="tabela-wrap rolagem" id="tab-brutos"></div>
+      </div>
+
+      <div class="cartao largo">
+        <div class="cartao-topo">
+          <div>
+            <h2>Registro de coletas</h2>
+            <p class="desc">Cada requisição ao <code>/maquinas</code>. “Sobreposição” é quantas leituras já tinham sido vistas antes. Se ela for zero, podem ter sido perdidas leituras entre duas coletas.</p>
+          </div>
+        </div>
+        <div class="tabela-wrap rolagem" id="tab-log"></div>
+      </div>
+    </div>
+
+    <footer>Os dados ficam salvos só neste navegador (localStorage) para sobreviver a recarregamentos. Para persistência real do projeto, use um banco de dados.</footer>
+  </div>
+
+  <script>
+    // O painel sempre lê a API pelo proxy do servidor.py, que evita o bloqueio de CORS.
+    const URL_PADRAO = location.protocol.startsWith("http") ? location.origin + "/api" : "http://localhost:8000/api";
+    const MAQUINAS_CONHECIDAS = ["TORNO_CNC_01", "PRENSA_HIDRAULICA_01", "ESTEIRA_01", "ROBO_SOLDAGEM_01", "COMPRESSOR_01", "EMBALADORA_01"];
+    const CAMPOS_META = new Set(["id", "timestamp", "maquina"]);
+    const SLOTS = ["--s1", "--s2", "--s3", "--s4", "--s5", "--s6", "--s7", "--s8"];
+    const CHAVE_CONFIG = "pi3-exploracao-config-v2";
+    const CHAVE_DADOS = "pi3-exploracao-dados";
+    const MAX_SALVOS = 15000;
+
+    const estado = {
+      base: URL_PADRAO,
+      intervalo: 5,
+      ativo: true,
+      timer: null,
+      emAndamento: false,
+      registros: new Map(),
+      coletas: [],
+      status: null,
+      cores: new Map(),
+      filtroMaquina: "todas",
+      janelaMin: 0
+    };
+
+    // ---------- utilidades ----------
+    const $ = s => document.querySelector(s);
+    const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const fmt = (v, d = 2) => v == null || !isFinite(v) ? "—" : Number(v).toLocaleString("pt-BR", { maximumFractionDigits: d });
+    const fmtHora = t => new Date(t).toLocaleTimeString("pt-BR");
+    const fmtDataHora = t => new Date(t).toLocaleString("pt-BR");
+    const vazio = msg => `<div class="vazio">${esc(msg)}</div>`;
+
+    function relativo(t) {
+      const s = Math.max(0, Math.round((Date.now() - t) / 1000));
+      if (s < 60) return `há ${s} s`;
+      const m = Math.floor(s / 60);
+      return m < 60 ? `há ${m} min` : `há ${Math.floor(m / 60)} h`;
+    }
+
+    function num(v) {
+      if (typeof v === "number") return isFinite(v) ? v : NaN;
+      if (typeof v === "string" && v.trim() !== "") {
+        const n = Number(v.replace(",", "."));
+        return isFinite(n) ? n : NaN;
+      }
+      return NaN;
+    }
+
+    const armazenamento = {
+      ler(k) { try { return localStorage.getItem(k); } catch { return null; } },
+      gravar(k, v) { try { localStorage.setItem(k, v); return true; } catch { return false; } },
+      apagar(k) { try { localStorage.removeItem(k); } catch { } }
+    };
+
+    function corMaquina(m) {
+      if (!estado.cores.has(m)) {
+        const i = estado.cores.size;
+        estado.cores.set(m, i < SLOTS.length ? SLOTS[i] : "--s-other");
+      }
+      return `var(${estado.cores.get(m)})`;
+    }
+    MAQUINAS_CONHECIDAS.forEach(corMaquina);
+
+    function ordemMaquina(a, b) {
+      return [...estado.cores.keys()].indexOf(a) - [...estado.cores.keys()].indexOf(b);
+    }
+
+    function lerVar(nome) {
+      return getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
+    }
+
+    function hexRgb(h) {
+      const v = h.replace("#", "");
+      return [0, 2, 4].map(i => parseInt(v.slice(i, i + 2), 16));
+    }
+
+    function classeStatus(s) {
+      const t = String(s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+      if (/falha|erro|alarm|critic|quebr|emerg|defeit/.test(t)) return "critical";
+      if (/manut/.test(t)) return "serious";
+      if (/parad|ocios|alert|atenc|aguard|standby|desligad|inativ/.test(t)) return "warning";
+      if (/operan|^ok$|normal|ativ|rodando|ligad|produz/.test(t)) return "good";
+      return "neutral";
+    }
+    const ICONE_STATUS = { good: "✓", warning: "!", serious: "⚙", critical: "✕", neutral: "•" };
+    function badge(s) {
+      const c = classeStatus(s);
+      return `<span class="badge ${c}"><b>${ICONE_STATUS[c]}</b>${esc(s)}</span>`;
+    }
+
+    // ---------- persistência local ----------
+    function carregar() {
+      try {
+        const cfg = JSON.parse(armazenamento.ler(CHAVE_CONFIG) || "{}");
+        if (cfg.base) estado.base = cfg.base;
+        if (cfg.intervalo) estado.intervalo = cfg.intervalo;
+      } catch { }
+      try {
+        const lista = JSON.parse(armazenamento.ler(CHAVE_DADOS) || "[]");
+        for (const r of lista) estado.registros.set(chave(r), r);
+      } catch { }
+    }
+
+    function salvarConfig() {
+      armazenamento.gravar(CHAVE_CONFIG, JSON.stringify({ base: estado.base, intervalo: estado.intervalo }));
+    }
+
+    function salvarRegistros() {
+      const lista = [...estado.registros.values()].slice(-MAX_SALVOS);
+      armazenamento.gravar(CHAVE_DADOS, JSON.stringify(lista));
+    }
+
+    // ---------- coleta ----------
+    function chave(r) {
+      if (r.id == null && r.timestamp == null) return JSON.stringify(r);
+      return `${r.maquina}|${r.id ?? ""}|${r.timestamp ?? ""}`;
+    }
+
+    function extrairLista(d) {
+      if (Array.isArray(d)) return d;
+      if (Array.isArray(d?.dados)) return d.dados;
+      if (d && typeof d === "object") {
+        const arr = Object.values(d).find(Array.isArray);
+        if (arr) return arr;
+      }
+      return [];
+    }
+
+    function normalizar(item, agora) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+      const r = { ...item };
+      r.maquina = String(item.maquina ?? item.machine ?? "DESCONHECIDA");
+      const t = Date.parse(item.timestamp);
+      r._t = isFinite(t) ? t : agora;
+      r._coletado = agora;
+      return r;
+    }
+
+    async function buscarJSON(caminho) {
+      const ctrl = new AbortController();
+      const limite = setTimeout(() => ctrl.abort(), 8000);
+      try {
+        const resp = await fetch(estado.base.replace(/\/+$/, "") + caminho, { signal: ctrl.signal, cache: "no-store" });
+        if (!resp.ok) {
+          const detalhe = await resp.json().then(j => j.erro).catch(() => "");
+          throw new Error(`HTTP ${resp.status} em ${caminho}${detalhe ? ` — ${detalhe}` : ""}`);
+        }
+        return await resp.json();
+      } finally {
+        clearTimeout(limite);
+      }
+    }
+
+    function descreverErro(e) {
+      if (e.name === "AbortError") return { texto: "Tempo esgotado (8 s): o servidor não respondeu.", rede: true };
+      if (e instanceof TypeError) return { texto: "Falha de rede ou bloqueio CORS.", rede: true };
+      if (e instanceof SyntaxError) return { texto: "A resposta não é um JSON válido.", rede: false };
+      return { texto: e.message, rede: false };
+    }
+
+    async function coletar() {
+      if (estado.emAndamento) return;
+      estado.emAndamento = true;
+      const inicio = performance.now();
+      const reg = { hora: Date.now(), ok: false, recebidos: 0, novos: 0, ms: 0, erro: "", rede: false };
+      try {
+        const [st, dados] = await Promise.all([
+          buscarJSON("/status").catch(() => null),
+          buscarJSON("/maquinas")
+        ]);
+        estado.status = st;
+        const lista = extrairLista(dados);
+        reg.recebidos = lista.length;
+        for (const item of lista) {
+          const r = normalizar(item, reg.hora);
+          if (!r) continue;
+          const k = chave(r);
+          if (!estado.registros.has(k)) {
+            estado.registros.set(k, r);
+            reg.novos++;
+          }
+        }
+        reg.ok = true;
+        const anterior = estado.coletas.find(c => c.ok);
+        reg.semSobreposicao = !!anterior && anterior.recebidos > 0 && reg.recebidos > 0 && reg.novos === reg.recebidos;
+      } catch (e) {
+        const d = descreverErro(e);
+        reg.erro = d.texto;
+        reg.rede = d.rede;
+      }
+      reg.ms = Math.round(performance.now() - inicio);
+      estado.coletas.unshift(reg);
+      if (estado.coletas.length > 300) estado.coletas.length = 300;
+      estado.emAndamento = false;
+      if (reg.novos) salvarRegistros();
+      renderizar(reg.novos > 0 || estado.coletas.length === 1);
+    }
+
+    function agendar() {
+      clearInterval(estado.timer);
+      if (estado.ativo) estado.timer = setInterval(coletar, estado.intervalo * 1000);
+      $("#btn-ativo").textContent = estado.ativo ? "Pausar" : "Retomar";
+    }
+
+    // ---------- análise ----------
+    function registrosFiltrados(todos) {
+      let arr = todos;
+      if (estado.filtroMaquina !== "todas") arr = arr.filter(r => r.maquina === estado.filtroMaquina);
+      if (estado.janelaMin > 0 && arr.length) {
+        let maxT = -Infinity;
+        for (const r of arr) if (r._t > maxT) maxT = r._t;
+        const lim = maxT - estado.janelaMin * 60000;
+        arr = arr.filter(r => r._t >= lim);
+      }
+      return arr;
+    }
+
+    function estatisticas(v) {
+      const n = v.length;
+      if (!n) return null;
+      const s = [...v].sort((a, b) => a - b);
+      const q = p => { const i = (n - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); };
+      let soma = 0;
+      for (const x of s) soma += x;
+      const media = soma / n;
+      let sq = 0;
+      for (const x of s) sq += (x - media) ** 2;
+      const q1 = q(.25), q3 = q(.75), iqr = q3 - q1;
+      const li = q1 - 1.5 * iqr, ls = q3 + 1.5 * iqr;
+      let outliers = 0;
+      for (const x of s) if (x < li || x > ls) outliers++;
+      return { n, min: s[0], q1, mediana: q(.5), q3, max: s[n - 1], media, desvio: n > 1 ? Math.sqrt(sq / (n - 1)) : 0, outliers };
+    }
+
+    function pearson(xs, ys) {
+      const n = xs.length;
+      if (n < 3) return NaN;
+      let mx = 0, my = 0;
+      for (let i = 0; i < n; i++) { mx += xs[i]; my += ys[i]; }
+      mx /= n; my /= n;
+      let sxy = 0, sxx = 0, syy = 0;
+      for (let i = 0; i < n; i++) {
+        const dx = xs[i] - mx, dy = ys[i] - my;
+        sxy += dx * dy; sxx += dx * dx; syy += dy * dy;
+      }
+      return sxx && syy ? sxy / Math.sqrt(sxx * syy) : NaN;
+    }
+
+    function perfilCampos(regs) {
+      const mapa = new Map();
+      const porMaquina = new Map();
+      for (const r of regs) {
+        porMaquina.set(r.maquina, (porMaquina.get(r.maquina) || 0) + 1);
+        for (const [k, v] of Object.entries(r)) {
+          if (k.startsWith("_") || CAMPOS_META.has(k)) continue;
+          let c = mapa.get(k);
+          if (!c) { c = { nome: k, presentes: 0, nulos: 0, nums: [], cats: new Map(), maquinas: new Set() }; mapa.set(k, c); }
+          if (v === null || v === undefined || v === "") { c.nulos++; continue; }
+          c.presentes++;
+          c.maquinas.add(r.maquina);
+          const n = typeof v === "boolean" ? NaN : num(v);
+          if (!isNaN(n)) c.nums.push(n);
+          else { const s = String(v); c.cats.set(s, (c.cats.get(s) || 0) + 1); }
+        }
+      }
+      for (const c of mapa.values()) {
+        const nCat = c.presentes - c.nums.length;
+        c.tipo = c.nums.length && nCat ? "misto" : c.nums.length ? "numérico" : "categórico";
+        c.denomMaquinas = [...c.maquinas].reduce((s, m) => s + porMaquina.get(m), 0);
+        c.est = c.nums.length ? estatisticas(c.nums) : null;
+      }
+      return [...mapa.values()].sort((a, b) => (a.tipo === "categórico") - (b.tipo === "categórico") || a.nome.localeCompare(b.nome));
+    }
+
+    function resumoMaquinas(regs) {
+      const mapa = new Map();
+      for (const r of regs) {
+        let e = mapa.get(r.maquina);
+        if (!e) { e = { maquina: r.maquina, n: 0, ts: [], ultimo: null, campos: new Set() }; mapa.set(r.maquina, e); }
+        e.n++;
+        e.ts.push(r._t);
+        if (!e.ultimo || r._t >= e.ultimo._t) e.ultimo = r;
+        for (const k of Object.keys(r)) if (!k.startsWith("_") && !CAMPOS_META.has(k)) e.campos.add(k);
+      }
+      for (const e of mapa.values()) {
+        e.ts.sort((a, b) => a - b);
+        e.intervalo = e.n > 1 ? (e.ts[e.n - 1] - e.ts[0]) / (e.n - 1) / 1000 : NaN;
+      }
+      return [...mapa.values()].sort((a, b) => ordemMaquina(a.maquina, b.maquina));
+    }
+
+    function lacunasId(regs) {
+      const ids = new Set();
+      for (const r of regs) if (Number.isInteger(r.id)) ids.add(r.id);
+      if (ids.size < 2) return null;
+      let min = Infinity, max = -Infinity;
+      for (const i of ids) { if (i < min) min = i; if (i > max) max = i; }
+      return { faltando: max - min + 1 - ids.size, min, max };
+    }
+
+    // ---------- eixos e escalas ----------
+    function passoNice(bruto) {
+      const p = 10 ** Math.floor(Math.log10(bruto));
+      const f = bruto / p;
+      return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p;
+    }
+
+    function eixoNice(min, max, n = 5) {
+      if (!isFinite(min) || !isFinite(max)) { min = 0; max = 1; }
+      if (min === max) { const d = Math.abs(min) * 0.1 || 1; min -= d; max += d; }
+      const passo = passoNice((max - min) / n);
+      const a = Math.floor(min / passo) * passo, b = Math.ceil(max / passo) * passo;
+      const ticks = [];
+      for (let v = a; v <= b + passo / 2; v += passo) ticks.push(+v.toFixed(10));
+      return { min: a, max: b, ticks };
+    }
+
+    const escala = (d0, d1, r0, r1) => v => r0 + (v - d0) * (r1 - r0) / ((d1 - d0) || 1);
+
+    function gradeY(ey, y, x0, x1) {
+      return ey.ticks.map(t => `
+        <line x1="${x0}" x2="${x1}" y1="${y(t)}" y2="${y(t)}" style="stroke:var(--grid)" stroke-width="1"/>
+        <text x="${x0 - 8}" y="${y(t) + 4}" text-anchor="end">${fmt(t)}</text>`).join("");
+    }
+
+    function posicionarTooltip(tip, el, px, py) {
+      tip.hidden = false;
+      const larg = tip.offsetWidth, alt = tip.offsetHeight;
+      let left = px + 14;
+      if (left + larg > el.clientWidth) left = px - larg - 14;
+      tip.style.left = Math.max(0, left) + "px";
+      tip.style.top = Math.max(0, py - alt / 2) + "px";
+    }
+
+    function legendaHTML(nomes, tipo = "linha") {
+      if (nomes.length < 2) return "";
+      return `<div class="legenda">${nomes.map(m => `<span><i class="${tipo === "ponto" ? "ponto" : ""}" style="background:${corMaquina(m)}"></i>${esc(m)}</span>`).join("")}</div>`;
+    }
+
+    // ---------- gráficos ----------
+    function graficoSerie(el, regs, campo) {
+      if (!campo) { el.innerHTML = vazio("Nenhum campo numérico disponível ainda."); return; }
+      const grupos = new Map();
+      for (const r of regs) {
+        const y = num(r[campo]);
+        if (isNaN(y)) continue;
+        if (!grupos.has(r.maquina)) grupos.set(r.maquina, []);
+        grupos.get(r.maquina).push({ t: r._t, y });
+      }
+      if (!grupos.size) { el.innerHTML = vazio("Sem valores para este campo no filtro atual."); return; }
+      const series = [...grupos].sort((a, b) => ordemMaquina(a[0], b[0])).map(([m, pts]) => ({ m, pts: pts.sort((a, b) => a.t - b.t), cor: corMaquina(m) }));
+
+      const W = Math.max(300, el.clientWidth), H = 300;
+      const direto = series.length <= 4;
+      const M = { t: 12, r: direto ? 150 : 16, b: 28, l: 56 };
+      let tMin = Infinity, tMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+      for (const s of series) for (const p of s.pts) {
+        if (p.t < tMin) tMin = p.t; if (p.t > tMax) tMax = p.t;
+        if (p.y < yMin) yMin = p.y; if (p.y > yMax) yMax = p.y;
+      }
+      const ey = eixoNice(yMin, yMax);
+      const x = escala(tMin, tMax === tMin ? tMin + 1 : tMax, M.l, W - M.r);
+      const y = escala(ey.min, ey.max, H - M.b, M.t);
+
+      let svg = gradeY(ey, y, M.l, W - M.r);
+      const nt = W < 500 ? 3 : 5;
+      for (let i = 0; i < nt; i++) {
+        const t = tMin + (tMax - tMin) * i / (nt - 1 || 1);
+        svg += `<text x="${x(t)}" y="${H - 8}" text-anchor="${i === 0 ? "start" : i === nt - 1 ? "end" : "middle"}">${fmtHora(t)}</text>`;
+      }
+      svg += `<line x1="${M.l}" x2="${W - M.r}" y1="${H - M.b}" y2="${H - M.b}" style="stroke:var(--axis)"/>`;
+      for (const s of series) {
+        if (s.pts.length === 1) {
+          svg += `<circle cx="${x(s.pts[0].t)}" cy="${y(s.pts[0].y)}" r="4" style="fill:${s.cor}"/>`;
+        } else {
+          const d = s.pts.map((p, i) => `${i ? "L" : "M"}${x(p.t).toFixed(1)},${y(p.y).toFixed(1)}`).join("");
+          svg += `<path d="${d}" fill="none" style="stroke:${s.cor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+        }
+      }
+      if (direto) {
+        const rot = series.map(s => { const u = s.pts[s.pts.length - 1]; return { m: s.m, y: y(u.y), x: x(u.t) }; }).sort((a, b) => a.y - b.y);
+        for (let i = 1; i < rot.length; i++) if (rot[i].y - rot[i - 1].y < 14) rot[i].y = rot[i - 1].y + 14;
+        for (const r of rot) svg += `<text class="rotulo-direto" x="${r.x + 8}" y="${r.y + 4}">${esc(r.m)}</text>`;
+      }
+      svg += `<g class="hover" visibility="hidden"><line class="cruz" y1="${M.t}" y2="${H - M.b}" style="stroke:var(--axis)"/>${series.map(s => `<circle r="4" style="fill:${s.cor};stroke:var(--card)" stroke-width="2"/>`).join("")}</g>`;
+      svg += `<rect class="alvo" x="${M.l}" y="${M.t}" width="${W - M.l - M.r}" height="${H - M.t - M.b}" fill="transparent"/>`;
+
+      el.innerHTML = legendaHTML(series.map(s => s.m)) + `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Série temporal de ${esc(campo)}">${svg}</svg><div class="tooltip" hidden></div>`;
+
+      const svgEl = el.querySelector("svg"), tip = el.querySelector(".tooltip"), g = el.querySelector(".hover");
+      const cruz = g.querySelector(".cruz"), pontos = g.querySelectorAll("circle");
+      const perto = (pts, t) => {
+        let lo = 0, hi = pts.length - 1;
+        while (lo < hi) { const m = (lo + hi) >> 1; if (pts[m].t < t) lo = m + 1; else hi = m; }
+        return lo > 0 && Math.abs(pts[lo - 1].t - t) < Math.abs(pts[lo].t - t) ? pts[lo - 1] : pts[lo];
+      };
+      el.querySelector(".alvo").addEventListener("mousemove", ev => {
+        const box = svgEl.getBoundingClientRect();
+        const px = (ev.clientX - box.left) * W / box.width;
+        const t = tMin + (px - M.l) / (W - M.l - M.r) * (tMax - tMin);
+        const achados = series.map(s => ({ s, p: perto(s.pts, t) }));
+        const ref = achados.reduce((a, b) => Math.abs(b.p.t - t) < Math.abs(a.p.t - t) ? b : a).p.t;
+        cruz.setAttribute("x1", x(ref)); cruz.setAttribute("x2", x(ref));
+        achados.forEach((a, i) => { pontos[i].setAttribute("cx", x(a.p.t)); pontos[i].setAttribute("cy", y(a.p.y)); });
+        g.setAttribute("visibility", "visible");
+        tip.innerHTML = `<div class="t-titulo">${fmtHora(ref)} · ${esc(campo)}</div>` +
+          achados.map(a => `<div class="t-linha"><span><i style="background:${a.s.cor}"></i> ${esc(a.s.m)}</span><b>${fmt(a.p.y)}</b></div>`).join("");
+        posicionarTooltip(tip, el, (ev.clientX - el.getBoundingClientRect().left), (ev.clientY - el.getBoundingClientRect().top));
+      });
+      el.querySelector(".alvo").addEventListener("mouseleave", () => { g.setAttribute("visibility", "hidden"); tip.hidden = true; });
+    }
+
+    function tabelaSeriePorMaquina(el, regs, campo) {
+      if (!campo) { el.innerHTML = ""; return; }
+      const grupos = new Map();
+      for (const r of regs) {
+        const v = num(r[campo]);
+        if (isNaN(v)) continue;
+        if (!grupos.has(r.maquina)) grupos.set(r.maquina, { vals: [], ultimo: null });
+        const g = grupos.get(r.maquina);
+        g.vals.push(v);
+        if (!g.ultimo || r._t >= g.ultimo.t) g.ultimo = { t: r._t, v };
+      }
+      if (!grupos.size) { el.innerHTML = ""; return; }
+      const linhas = [...grupos].sort((a, b) => ordemMaquina(a[0], b[0])).map(([m, g]) => {
+        const e = estatisticas(g.vals);
+        return `<tr><td><span class="sw" style="background:${corMaquina(m)}"></span>${esc(m)}</td>
+          <td class="n">${e.n}</td><td class="n">${fmt(e.min)}</td><td class="n">${fmt(e.mediana)}</td>
+          <td class="n">${fmt(e.media)}</td><td class="n">${fmt(e.max)}</td><td class="n">${fmt(e.desvio)}</td>
+          <td class="n">${fmt(e.desvio && e.media ? e.desvio / Math.abs(e.media) * 100 : NaN, 1)}%</td>
+          <td class="n">${e.outliers}</td><td class="n">${fmt(g.ultimo.v)}</td></tr>`;
+      }).join("");
+      el.innerHTML = `<table class="dados"><thead><tr><th>${esc(campo)} por máquina</th><th class="n">n</th><th class="n">mín</th><th class="n">mediana</th><th class="n">média</th><th class="n">máx</th><th class="n">desvio</th><th class="n">CV</th><th class="n">outliers</th><th class="n">último</th></tr></thead><tbody>${linhas}</tbody></table>`;
+    }
+
+    function barraTopo(x, y, w, h, r) {
+      r = Math.min(r, w / 2, h);
+      return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+    }
+
+    function graficoHistograma(el, regs, campo) {
+      if (!campo) { el.innerHTML = vazio("Nenhum campo numérico disponível ainda."); return; }
+      const vals = regs.map(r => num(r[campo])).filter(v => !isNaN(v));
+      if (vals.length < 2) { el.innerHTML = vazio("Poucos valores para montar a distribuição."); return; }
+      const e = estatisticas(vals);
+      const nb = e.min === e.max ? 1 : Math.min(30, Math.max(5, Math.ceil(Math.sqrt(vals.length))));
+      const larg = (e.max - e.min) / nb || 1;
+      const cont = new Array(nb).fill(0);
+      for (const v of vals) cont[Math.min(nb - 1, Math.floor((v - e.min) / larg))]++;
+
+      const W = Math.max(280, el.clientWidth), H = 260;
+      const M = { t: 18, r: 12, b: 28, l: 44 };
+      const ey = eixoNice(0, Math.max(...cont), 4);
+      const x = escala(e.min, e.min + larg * nb, M.l, W - M.r);
+      const y = escala(0, ey.max, H - M.b, M.t);
+      const bw = (W - M.l - M.r) / nb;
+
+      let svg = gradeY(ey, y, M.l, W - M.r);
+      cont.forEach((c, i) => {
+        if (!c) return;
+        const x0 = M.l + i * bw + 1, h = H - M.b - y(c);
+        svg += `<path d="${barraTopo(x0, y(c), Math.max(1, bw - 2), h, 4)}" style="fill:var(--s1)"/>`;
+      });
+      svg += `<line x1="${M.l}" x2="${W - M.r}" y1="${H - M.b}" y2="${H - M.b}" style="stroke:var(--axis)"/>`;
+      const xm = x(e.mediana);
+      svg += `<line x1="${xm}" x2="${xm}" y1="${M.t}" y2="${H - M.b}" style="stroke:var(--ink-2)" stroke-width="1"/>`;
+      svg += `<text class="rotulo-ref" x="${xm + 4}" y="${M.t - 4}">mediana ${fmt(e.mediana)}</text>`;
+      svg += `<text x="${M.l}" y="${H - 8}">${fmt(e.min)}</text><text x="${W - M.r}" y="${H - 8}" text-anchor="end">${fmt(e.max)}</text>`;
+      cont.forEach((c, i) => { svg += `<rect class="alvo-barra" data-i="${i}" x="${M.l + i * bw}" y="${M.t}" width="${bw}" height="${H - M.t - M.b}" fill="transparent"/>`; });
+
+      el.innerHTML = `<div class="info-grafico">n = ${e.n} · média ${fmt(e.media)} · desvio ${fmt(e.desvio)} · ${e.outliers} outlier(s)</div>
+        <svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Histograma de ${esc(campo)}">${svg}</svg><div class="tooltip" hidden></div>`;
+      const tip = el.querySelector(".tooltip");
+      el.querySelectorAll(".alvo-barra").forEach(rect => {
+        rect.addEventListener("mousemove", ev => {
+          const i = +rect.dataset.i, a = e.min + i * larg;
+          tip.innerHTML = `<div class="t-titulo">${esc(campo)}: ${fmt(a)} a ${fmt(a + larg)}</div><div class="t-linha"><span>Leituras</span><b>${cont[i]} (${fmt(cont[i] / e.n * 100, 1)}%)</b></div>`;
+          const b = el.getBoundingClientRect();
+          posicionarTooltip(tip, el, ev.clientX - b.left, ev.clientY - b.top);
+        });
+        rect.addEventListener("mouseleave", () => { tip.hidden = true; });
+      });
+    }
+
+    function graficoDispersao(el, regs, cx, cy) {
+      if (!cx || !cy) { el.innerHTML = vazio("Escolha dois campos numéricos."); return; }
+      if (cx === cy) { el.innerHTML = vazio("Escolha campos diferentes para X e Y."); return; }
+      const pts = [];
+      for (const r of regs) {
+        const a = num(r[cx]), b = num(r[cy]);
+        if (!isNaN(a) && !isNaN(b)) pts.push({ x: a, y: b, r });
+      }
+      const amostra = pts.slice(-3000);
+      if (amostra.length < 2) { el.innerHTML = vazio(`Nenhuma leitura tem “${cx}” e “${cy}” ao mesmo tempo. Esses campos podem vir de máquinas diferentes.`); return; }
+      const maquinas = [...new Set(amostra.map(p => p.r.maquina))].sort(ordemMaquina);
+      const colorir = maquinas.length <= 3;
+      const r = pearson(pts.map(p => p.x), pts.map(p => p.y));
+
+      const W = Math.max(280, el.clientWidth), H = 260;
+      const M = { t: 10, r: 12, b: 34, l: 48 };
+      const ex = eixoNice(Math.min(...amostra.map(p => p.x)), Math.max(...amostra.map(p => p.x)), 5);
+      const ey = eixoNice(Math.min(...amostra.map(p => p.y)), Math.max(...amostra.map(p => p.y)), 4);
+      const x = escala(ex.min, ex.max, M.l, W - M.r);
+      const y = escala(ey.min, ey.max, H - M.b, M.t);
+
+      let svg = gradeY(ey, y, M.l, W - M.r);
+      svg += ex.ticks.map(t => `<text x="${x(t)}" y="${H - 18}" text-anchor="middle">${fmt(t)}</text>`).join("");
+      svg += `<text x="${(M.l + W - M.r) / 2}" y="${H - 2}" text-anchor="middle">${esc(cx)}</text>`;
+      svg += `<line x1="${M.l}" x2="${W - M.r}" y1="${H - M.b}" y2="${H - M.b}" style="stroke:var(--axis)"/>`;
+      for (const p of amostra) {
+        const cor = colorir ? corMaquina(p.r.maquina) : "var(--s1)";
+        svg += `<circle cx="${x(p.x).toFixed(1)}" cy="${y(p.y).toFixed(1)}" r="4" style="fill:${cor};stroke:var(--card)" stroke-width="1.5" fill-opacity=".85"/>`;
+      }
+      svg += `<circle class="destaque" r="6" fill="none" style="stroke:var(--ink)" stroke-width="2" visibility="hidden"/>`;
+
+      const forca = isNaN(r) ? "indefinida" : Math.abs(r) >= .7 ? "forte" : Math.abs(r) >= .4 ? "moderada" : Math.abs(r) >= .2 ? "fraca" : "desprezível";
+      const nota = colorir ? "" : ` · cor única (mais de 3 máquinas); filtre uma máquina para separar`;
+      el.innerHTML = `<div class="info-grafico">r = <b>${fmt(r, 3)}</b> (${forca}) · n = ${pts.length}${pts.length > 3000 ? " (exibindo 3000)" : ""} · Y: ${esc(cy)}${nota}</div>` +
+        (colorir ? legendaHTML(maquinas, "ponto") : "") +
+        `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Dispersão de ${esc(cx)} por ${esc(cy)}">${svg}</svg><div class="tooltip" hidden></div>`;
+
+      const svgEl = el.querySelector("svg"), tip = el.querySelector(".tooltip"), dest = el.querySelector(".destaque");
+      svgEl.addEventListener("mousemove", ev => {
+        const box = svgEl.getBoundingClientRect();
+        const px = (ev.clientX - box.left) * W / box.width, py = (ev.clientY - box.top) * H / box.height;
+        let melhor = null, dmin = 14 * 14;
+        for (const p of amostra) {
+          const d = (x(p.x) - px) ** 2 + (y(p.y) - py) ** 2;
+          if (d < dmin) { dmin = d; melhor = p; }
+        }
+        if (!melhor) { tip.hidden = true; dest.setAttribute("visibility", "hidden"); return; }
+        dest.setAttribute("cx", x(melhor.x)); dest.setAttribute("cy", y(melhor.y)); dest.setAttribute("visibility", "visible");
+        tip.innerHTML = `<div class="t-titulo"><i style="background:${corMaquina(melhor.r.maquina)}"></i> ${esc(melhor.r.maquina)} · ${fmtHora(melhor.r._t)}</div>
+          <div class="t-linha"><span>${esc(cx)}</span><b>${fmt(melhor.x)}</b></div><div class="t-linha"><span>${esc(cy)}</span><b>${fmt(melhor.y)}</b></div>`;
+        const b = el.getBoundingClientRect();
+        posicionarTooltip(tip, el, ev.clientX - b.left, ev.clientY - b.top);
+      });
+      svgEl.addEventListener("mouseleave", () => { tip.hidden = true; dest.setAttribute("visibility", "hidden"); });
+    }
+
+    function corDivergente(r) {
+      const meio = hexRgb(lerVar("--div-mid")), polo = hexRgb(lerVar(r >= 0 ? "--div-pos" : "--div-neg"));
+      const t = Math.min(1, Math.abs(r));
+      const c = meio.map((v, i) => Math.round(v + (polo[i] - v) * t));
+      return { fundo: `rgb(${c.join(",")})`, texto: t > .55 ? "#ffffff" : "var(--ink)" };
+    }
+
+    function graficoCorrelacao(el, regs, campos) {
+      if (campos.length < 2) { el.innerHTML = vazio("São necessários ao menos dois campos numéricos."); return; }
+      const k = campos.length;
+      let html = `<table class="corr"><thead><tr><th></th>${campos.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>`;
+      for (let i = 0; i < k; i++) {
+        html += `<tr><th class="lin">${esc(campos[i])}</th>`;
+        for (let j = 0; j < k; j++) {
+          const xs = [], ys = [];
+          for (const r of regs) {
+            const a = num(r[campos[i]]), b = num(r[campos[j]]);
+            if (!isNaN(a) && !isNaN(b)) { xs.push(a); ys.push(b); }
+          }
+          const r = i === j ? 1 : pearson(xs, ys);
+          const titulo = `${campos[i]} × ${campos[j]}: r = ${fmt(r, 3)} (n = ${xs.length})`;
+          if (isNaN(r)) html += `<td style="background:var(--div-mid);color:var(--muted)" title="${esc(titulo)}">—</td>`;
+          else { const c = corDivergente(r); html += `<td style="background:${c.fundo};color:${c.texto}" title="${esc(titulo)}">${fmt(r, 2)}</td>`; }
+        }
+        html += `</tr>`;
+      }
+      html += `</tbody></table><div class="escala-div"><span>−1</span><span class="g"></span><span>+1</span><span>· “—” = menos de 3 leituras em comum ou campo constante</span></div>`;
+      el.innerHTML = html;
+    }
+
+    // ---------- tabelas ----------
+    function renderKPIs(todos) {
+      const maquinas = new Set(todos.map(r => r.maquina));
+      const perfil = perfilCampos(todos);
+      const nNum = perfil.filter(c => c.tipo !== "categórico").length;
+      const ok = estado.coletas.filter(c => c.ok).length, erros = estado.coletas.length - ok;
+      const ult = estado.coletas[0];
+      const lac = lacunasId(todos);
+      const st = estado.status;
+      const stTexto = st && typeof st === "object"
+        ? Object.entries(st).filter(([k]) => k !== "online").map(([k, v]) => `${esc(k)}: ${esc(v)}`).join(" · ")
+        : "rota /status indisponível";
+      const online = st && typeof st === "object" && "online" in st ? (st.online ? "Online" : "Offline") : (ult?.ok ? "Respondendo" : "—");
+      const kpis = [
+        ["Leituras coletadas", fmt(todos.length, 0), ult?.ok ? `+${ult.novos} na última coleta` : "nenhuma coleta válida ainda"],
+        ["Máquinas", maquinas.size, `${MAQUINAS_CONHECIDAS.filter(m => maquinas.has(m)).length} de ${MAQUINAS_CONHECIDAS.length} esperadas`],
+        ["Campos", perfil.length, `${nNum} numéricos · ${perfil.length - nNum} categóricos`],
+        ["Coletas", ok, `${erros} com erro${ult ? ` · ${ult.ms} ms na última` : ""}`],
+        ["Ids ausentes", lac ? fmt(lac.faltando, 0) : "—", lac ? `ids de ${lac.min} a ${lac.max}` : "ids não numéricos ou insuficientes"],
+        ["API", online, stTexto]
+      ];
+      $("#kpis").innerHTML = kpis.map(([r, v, s]) => `<div class="kpi"><div class="rotulo">${r}</div><div class="valor">${v}</div><div class="sub">${s}</div></div>`).join("");
+    }
+
+    function renderMaquinas(todos) {
+      const linhas = resumoMaquinas(todos);
+      if (!linhas.length) { $("#tab-maquinas").innerHTML = vazio("Nenhuma leitura coletada ainda."); return; }
+      const max = Math.max(...linhas.map(e => e.n));
+      $("#tab-maquinas").innerHTML = `<table class="dados"><thead><tr><th>Máquina</th><th class="n">Leituras</th><th class="n">Intervalo médio</th><th>Último status</th><th>Última leitura</th><th>Campos enviados</th></tr></thead><tbody>${linhas.map(e => `
+        <tr><td><span class="sw" style="background:${corMaquina(e.maquina)}"></span>${esc(e.maquina)}</td>
+        <td class="n">${e.n}<span class="barra-mini"><span style="width:${e.n / max * 100}%"></span></span></td>
+        <td class="n">${isNaN(e.intervalo) ? "—" : fmt(e.intervalo, 1) + " s"}</td>
+        <td>${e.ultimo.status != null ? badge(e.ultimo.status) : '<span class="muted">—</span>'}</td>
+        <td>${fmtHora(e.ultimo._t)} <span class="muted">(${relativo(e.ultimo._coletado)})</span></td>
+        <td>${[...e.campos].map(esc).join(", ")}</td></tr>`).join("")}</tbody></table>`;
+    }
+
+    function tipoDado(valores) {
+      const tipos = new Set();
+      for (const v of valores) {
+        if (typeof v === "boolean") tipos.add("booleano");
+        else if (typeof v === "number") tipos.add(Number.isInteger(v) ? "inteiro" : "decimal");
+        else if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}T/.test(v) && isFinite(Date.parse(v))) tipos.add("data/hora");
+        else if (typeof v === "object") tipos.add("objeto");
+        else tipos.add("texto");
+      }
+      if (tipos.has("decimal")) tipos.delete("inteiro");
+      return [...tipos].join(" / ") || "—";
+    }
+
+    function comportamento(seq) {
+      if (seq.length < 2) return "—";
+      let sobe = 0, desce = 0;
+      for (let i = 1; i < seq.length; i++) {
+        const d = seq[i] - seq[i - 1];
+        if (d > 0) sobe++; else if (d < 0) desce++;
+      }
+      if (!sobe && !desce) return "constante";
+      // Tolera uma ou outra queda isolada (ex.: reinício do contador no servidor).
+      if (desce / (sobe + desce) < .05) return "sempre crescente";
+      if (sobe / (sobe + desce) < .05) return "sempre decrescente";
+      return "variável";
+    }
+
+    function renderDicionario(todos) {
+      const maquinas = [...new Set(todos.map(r => r.maquina))].sort(ordemMaquina);
+      const sel = $("#dic-maquina");
+      atualizarSelect(sel, maquinas, maquinas[0]);
+      const regs = todos.filter(r => r.maquina === sel.value).sort((a, b) => a._t - b._t);
+      if (!regs.length) {
+        $("#dic-resumo").textContent = "";
+        $("#tab-dicionario").innerHTML = vazio("Nenhuma leitura coletada ainda.");
+        return;
+      }
+
+      const campos = [];
+      for (const r of regs) for (const k of Object.keys(r)) if (!k.startsWith("_") && !campos.includes(k)) campos.push(k);
+      const ultimo = regs[regs.length - 1];
+      $("#dic-resumo").innerHTML = `<span class="sw" style="background:${corMaquina(sel.value)}"></span><b>${esc(sel.value)}</b>` +
+        (ultimo.tipo ? ` · tipo ${esc(ultimo.tipo)}` : "") +
+        ` · ${fmt(regs.length, 0)} leituras · ${campos.length} campos · de ${fmtHora(regs[0]._t)} a ${fmtHora(ultimo._t)}`;
+
+      const linhas = campos.map(c => {
+        const vals = regs.map(r => r[c]).filter(v => v !== null && v !== undefined && v !== "");
+        const tipo = tipoDado(vals);
+        const distintos = new Set(vals.map(v => typeof v === "object" ? JSON.stringify(v) : v)).size;
+        let est = null, comp = "—", resumo = "";
+
+        if (tipo === "inteiro" || tipo === "decimal") {
+          est = estatisticas(vals);
+          comp = comportamento(vals);
+          resumo = comp === "sempre crescente" && vals.length > 1
+            ? `+${fmt((vals[vals.length - 1] - vals[0]) / (vals.length - 1))} por leitura em média`
+            : `último: ${fmt(vals[vals.length - 1], 4)}`;
+        } else if (tipo === "data/hora") {
+          const ts = vals.map(v => Date.parse(v));
+          comp = comportamento(ts);
+          const intervalo = ts.length > 1 ? (ts[ts.length - 1] - ts[0]) / (ts.length - 1) / 1000 : NaN;
+          resumo = `${fmtDataHora(ts[0])} até ${fmtHora(ts[ts.length - 1])}` + (isNaN(intervalo) ? "" : ` · a cada ${fmt(intervalo, 1)} s em média`);
+        } else {
+          const cont = new Map();
+          for (const v of vals) { const s = String(v); cont.set(s, (cont.get(s) || 0) + 1); }
+          comp = distintos === 1 ? "constante" : "categórico";
+          resumo = [...cont].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([v, n]) => `${esc(v)} (${fmt(n / vals.length * 100, 0)}%)`).join(", ");
+        }
+
+        return `<tr><td><b>${esc(c)}</b></td><td>${tipo}</td><td>${comp}</td>
+          <td class="n">${fmt(vals.length / regs.length * 100, 1)}%</td><td class="n">${fmt(distintos, 0)}</td>
+          <td class="n">${fmt(est?.min, 4)}</td><td class="n">${fmt(est?.media, 4)}</td><td class="n">${fmt(est?.max, 4)}</td><td class="n">${fmt(est?.desvio, 4)}</td>
+          <td>${resumo || '<span class="muted">—</span>'}</td></tr>`;
+      }).join("");
+
+      $("#tab-dicionario").innerHTML = `<table class="dados"><thead><tr><th>Campo</th><th>Tipo de dado</th><th>Comportamento</th><th class="n">Preench.</th><th class="n">Distintos</th>
+        <th class="n">Mín</th><th class="n">Média</th><th class="n">Máx</th><th class="n">Desvio</th><th>Resumo</th></tr></thead><tbody>${linhas}</tbody></table>`;
+    }
+
+    function renderPerfil(perfil, total) {
+      if (!perfil.length) { $("#tab-perfil").innerHTML = vazio("Sem campos para analisar no filtro atual."); return; }
+      $("#tab-perfil").innerHTML = `<table class="dados"><thead><tr><th>Campo</th><th>Tipo</th><th class="n">Preench. geral</th><th class="n">Preench. nas máquinas</th><th>Máquinas que enviam</th>
+        <th class="n">mín</th><th class="n">Q1</th><th class="n">mediana</th><th class="n">Q3</th><th class="n">máx</th><th class="n">média</th><th class="n">desvio</th><th class="n">outliers</th><th>Valores mais frequentes</th></tr></thead><tbody>${perfil.map(c => {
+          const e = c.est || {};
+          const top = [...c.cats].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([v, n]) => `${esc(v)} (${n})`).join(", ");
+          return `<tr><td><b>${esc(c.nome)}</b></td><td>${c.tipo}</td>
+            <td class="n">${fmt(c.presentes / total * 100, 1)}%</td>
+            <td class="n">${fmt(c.denomMaquinas ? c.presentes / c.denomMaquinas * 100 : NaN, 1)}%</td>
+            <td>${c.maquinas.size === new Set(MAQUINAS_CONHECIDAS).size && MAQUINAS_CONHECIDAS.every(m => c.maquinas.has(m)) ? "todas" : [...c.maquinas].sort(ordemMaquina).map(esc).join(", ")}</td>
+            <td class="n">${fmt(e.min)}</td><td class="n">${fmt(e.q1)}</td><td class="n">${fmt(e.mediana)}</td><td class="n">${fmt(e.q3)}</td><td class="n">${fmt(e.max)}</td>
+            <td class="n">${fmt(e.media)}</td><td class="n">${fmt(e.desvio)}</td><td class="n">${e.outliers ?? "—"}</td>
+            <td>${top || '<span class="muted">—</span>'}</td></tr>`;
+        }).join("")}</tbody></table>`;
+    }
+
+    function renderStatus(regs) {
+      const mapa = new Map(), totais = new Map();
+      for (const r of regs) {
+        if (r.status == null || r.status === "") continue;
+        const s = String(r.status);
+        if (!mapa.has(r.maquina)) mapa.set(r.maquina, new Map());
+        const m = mapa.get(r.maquina);
+        m.set(s, (m.get(s) || 0) + 1);
+        totais.set(s, (totais.get(s) || 0) + 1);
+      }
+      if (!mapa.size) { $("#tab-status").innerHTML = vazio("Nenhuma leitura com o campo “status”."); return; }
+      const cols = [...totais].sort((a, b) => b[1] - a[1]).map(([s]) => s);
+      const linhas = [...mapa].sort((a, b) => ordemMaquina(a[0], b[0])).map(([maq, m]) => {
+        const tot = [...m.values()].reduce((a, b) => a + b, 0);
+        return `<tr><td><span class="sw" style="background:${corMaquina(maq)}"></span>${esc(maq)}</td>${cols.map(s => {
+          const n = m.get(s) || 0;
+          return `<td class="n">${n ? `${n} <span class="muted">(${fmt(n / tot * 100, 0)}%)</span><span class="barra-mini" style="width:50px"><span style="width:${n / tot * 100}%"></span></span>` : '<span class="muted">0</span>'}</td>`;
+        }).join("")}</tr>`;
+      }).join("");
+      $("#tab-status").innerHTML = `<table class="dados"><thead><tr><th>Máquina</th>${cols.map(s => `<th class="n">${badge(s)}</th>`).join("")}</tr></thead><tbody>${linhas}</tbody></table>`;
+    }
+
+    function renderBrutos(regs) {
+      const recentes = [...regs].sort((a, b) => b._t - a._t).slice(0, 150);
+      if (!recentes.length) { $("#tab-brutos").innerHTML = vazio("Nenhuma leitura no filtro atual."); return; }
+      const cols = ["id", "timestamp", "maquina"];
+      for (const r of recentes) for (const k of Object.keys(r)) if (!k.startsWith("_") && !cols.includes(k)) cols.push(k);
+      $("#tab-brutos").innerHTML = `<table class="dados"><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${recentes.map(r => `<tr>${cols.map(c => {
+        const v = r[c];
+        if (v === undefined || v === null || v === "") return `<td class="muted">—</td>`;
+        if (c === "status") return `<td>${badge(v)}</td>`;
+        if (c === "maquina") return `<td><span class="sw" style="background:${corMaquina(v)}"></span>${esc(v)}</td>`;
+        return typeof v === "number" ? `<td class="n">${fmt(v, 4)}</td>` : `<td>${esc(typeof v === "object" ? JSON.stringify(v) : v)}</td>`;
+      }).join("")}</tr>`).join("")}</tbody></table>`;
+    }
+
+    function renderLog() {
+      if (!estado.coletas.length) { $("#tab-log").innerHTML = vazio("Nenhuma coleta realizada ainda."); return; }
+      $("#tab-log").innerHTML = `<table class="dados"><thead><tr><th>Hora</th><th>Resultado</th><th class="n">Recebidas</th><th class="n">Novas</th><th class="n">Sobreposição</th><th class="n">Tempo</th><th>Observação</th></tr></thead><tbody>${estado.coletas.map(c => `
+        <tr><td>${fmtHora(c.hora)}</td><td>${c.ok ? badge("ok") : `<span class="badge critical"><b>✕</b>erro</span>`}</td>
+        <td class="n">${c.ok ? c.recebidos : "—"}</td><td class="n">${c.ok ? c.novos : "—"}</td><td class="n">${c.ok ? c.recebidos - c.novos : "—"}</td>
+        <td class="n">${c.ms} ms</td><td>${c.erro ? esc(c.erro) : c.semSobreposicao ? '<span class="badge warning"><b>!</b>sem sobreposição: possível perda</span>' : ""}</td></tr>`).join("")}</tbody></table>`;
+    }
+
+    function renderPill() {
+      const ult = estado.coletas[0];
+      const pill = $("#pill");
+      pill.classList.toggle("ok", !!ult?.ok);
+      pill.classList.toggle("erro", !!ult && !ult.ok);
+      const modo = estado.ativo ? `Coletando a cada ${estado.intervalo} s` : "Pausado";
+      $("#pill-texto").textContent = ult ? `${modo} · última ${relativo(ult.hora)} · ${ult.ok ? ult.ms + " ms" : "falhou"}` : `${modo} · aguardando primeira coleta…`;
+    }
+
+    function renderAvisos() {
+      const ult = estado.coletas[0];
+      const erro = $("#aviso-erro");
+      if (ult && !ult.ok) {
+        erro.hidden = false;
+        erro.innerHTML = `<b>Não foi possível ler <code>${esc(estado.base)}/maquinas</code>:</b> ${esc(ult.erro)}` + (ult.rede ? `<br>
+          Verifique: (1) se o servidor está ligado e o IP/porta estão corretos; (2) se este computador está na mesma rede; (3) se a porta 8080 está liberada no firewall;
+          (4) se a API envia o cabeçalho <code>Access-Control-Allow-Origin: *</code>. Sem ele, o navegador bloqueia a leitura feita por esta página (CORS).
+          Se a URL base for <code>localhost:8000/api</code>, confira se o <code>python3 servidor.py</code> está rodando nesta pasta.` : "");
+      } else erro.hidden = true;
+
+      const avisos = [];
+      const limpeza = num(estado.status?.limpezaEmSegundos);
+      if (!isNaN(limpeza) && estado.intervalo >= limpeza) avisos.push(`O intervalo de coleta (${estado.intervalo} s) é maior ou igual à limpeza do servidor (${limpeza} s). Há risco de perder leituras.`);
+      const perdas = estado.coletas.filter(c => c.semSobreposicao).length;
+      if (perdas) avisos.push(`${perdas} coleta(s) sem sobreposição com a anterior: pode ter havido leituras apagadas antes de serem coletadas.`);
+      const av = $("#aviso-qualidade");
+      av.hidden = !avisos.length;
+      av.innerHTML = avisos.map(esc).join("<br>");
+    }
+
+    function atualizarSelect(sel, opcoes, preferido) {
+      const atual = sel.value;
+      const html = opcoes.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join("");
+      if (sel.dataset.opcoes !== html) { sel.innerHTML = html; sel.dataset.opcoes = html; }
+      sel.value = opcoes.includes(atual) ? atual : opcoes.includes(preferido) ? preferido : (opcoes[0] ?? "");
+    }
+
+    function atualizarFiltroMaquinas(todos) {
+      const maquinas = [...new Set(todos.map(r => r.maquina))].sort(ordemMaquina);
+      const sel = $("#f-maquina");
+      const html = `<option value="todas">Todas</option>` + maquinas.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join("");
+      if (sel.dataset.opcoes !== html) { sel.innerHTML = html; sel.dataset.opcoes = html; }
+      sel.value = maquinas.includes(estado.filtroMaquina) ? estado.filtroMaquina : "todas";
+      estado.filtroMaquina = sel.value;
+    }
+
+    function renderizar(graficos = true) {
+      const todos = [...estado.registros.values()];
+      atualizarFiltroMaquinas(todos);
+      const regs = registrosFiltrados(todos);
+      const perfil = perfilCampos(regs);
+      const numericos = perfil.filter(c => c.tipo !== "categórico").map(c => c.nome);
+
+      $("#nota-filtro").textContent = `${fmt(regs.length, 0)} de ${fmt(todos.length, 0)} leituras no filtro atual. Valem para perfil, gráficos, status e leituras brutas.`;
+      renderPill();
+      renderAvisos();
+      renderKPIs(todos);
+      renderMaquinas(todos);
+      renderDicionario(todos);
+      renderPerfil(perfil, regs.length);
+      renderStatus(regs);
+      renderBrutos(regs);
+      renderLog();
+
+      atualizarSelect($("#sel-serie"), numericos, "temperatura");
+      atualizarSelect($("#sel-hist"), numericos, "temperatura");
+      atualizarSelect($("#sel-x"), numericos, "temperatura");
+      atualizarSelect($("#sel-y"), numericos, numericos.find(c => c !== $("#sel-x").value) ?? "");
+      if (graficos) desenharGraficos(regs, numericos);
+    }
+
+    function desenharGraficos(regs, numericos) {
+      if (!regs) {
+        regs = registrosFiltrados([...estado.registros.values()]);
+        numericos = perfilCampos(regs).filter(c => c.tipo !== "categórico").map(c => c.nome);
+      }
+      graficoSerie($("#g-serie"), regs, $("#sel-serie").value);
+      tabelaSeriePorMaquina($("#tab-serie"), regs, $("#sel-serie").value);
+      graficoHistograma($("#g-hist"), regs, $("#sel-hist").value);
+      graficoDispersao($("#g-disp"), regs, $("#sel-x").value, $("#sel-y").value);
+      graficoCorrelacao($("#g-corr"), regs, numericos);
+    }
+
+    // ---------- exportação ----------
+    function baixar(nome, conteudo, tipo) {
+      const url = URL.createObjectURL(new Blob([conteudo], { type: tipo }));
+      const a = Object.assign(document.createElement("a"), { href: url, download: nome });
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function dadosExportacao() {
+      return [...estado.registros.values()].sort((a, b) => a._t - b._t).map(r => {
+        const o = {};
+        for (const [k, v] of Object.entries(r)) if (!k.startsWith("_")) o[k] = v;
+        o.coletado_em = new Date(r._coletado).toISOString();
+        return o;
+      });
+    }
+
+    function exportarCSV() {
+      const lista = dadosExportacao();
+      const cols = ["id", "timestamp", "maquina"];
+      for (const r of lista) for (const k of Object.keys(r)) if (!cols.includes(k)) cols.push(k);
+      const cel = v => v == null ? "" : /[;"\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+      const csv = [cols.join(";"), ...lista.map(r => cols.map(c => cel(r[c])).join(";"))].join("\n");
+      baixar(`leituras_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`, csv, "text/csv;charset=utf-8");
+    }
+
+    function exportarJSON() {
+      baixar(`leituras_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.json`, JSON.stringify(dadosExportacao(), null, 2), "application/json");
+    }
+
+    // ---------- eventos ----------
+    $("#base-url").value = "";
+    carregar();
+    $("#base-url").value = estado.base;
+    $("#intervalo").value = String(estado.intervalo);
+
+    $("#base-url").addEventListener("change", e => {
+      estado.base = e.target.value.trim() || URL_PADRAO;
+      e.target.value = estado.base;
+      salvarConfig();
+      coletar();
+    });
+    $("#intervalo").addEventListener("change", e => {
+      estado.intervalo = +e.target.value;
+      salvarConfig();
+      agendar();
+      renderizar(false);
+    });
+    $("#btn-ativo").addEventListener("click", () => { estado.ativo = !estado.ativo; agendar(); renderPill(); });
+    $("#btn-agora").addEventListener("click", coletar);
+    $("#btn-csv").addEventListener("click", exportarCSV);
+    $("#btn-json").addEventListener("click", exportarJSON);
+    $("#btn-limpar").addEventListener("click", () => {
+      if (!confirm("Apagar todas as leituras coletadas neste navegador?")) return;
+      estado.registros.clear();
+      estado.coletas = [];
+      armazenamento.apagar(CHAVE_DADOS);
+      renderizar();
+    });
+    $("#f-maquina").addEventListener("change", e => { estado.filtroMaquina = e.target.value; renderizar(); });
+    $("#f-janela").addEventListener("change", e => { estado.janelaMin = +e.target.value; renderizar(); });
+    $("#dic-maquina").addEventListener("change", () => renderDicionario([...estado.registros.values()]));
+    ["#sel-serie", "#sel-hist", "#sel-x", "#sel-y"].forEach(s => $(s).addEventListener("change", () => desenharGraficos()));
+
+    let redimensionar;
+    window.addEventListener("resize", () => { clearTimeout(redimensionar); redimensionar = setTimeout(() => desenharGraficos(), 200); });
+    matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => desenharGraficos());
+    setInterval(renderPill, 1000);
+
+    renderizar();
+    agendar();
+    coletar();
+  </script>
+</body>
+</html>

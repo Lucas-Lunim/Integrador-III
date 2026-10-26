@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Descritivo técnico do Projeto Integrador III — Sistema Integrado de Análise e Gerenciamento de Dados Industriais.">
+  <title>Projeto Integrador III | Sistema Integrado de Dados Industriais</title>
+  <style>
+    :root {
+      --navy: #12243a;
+      --navy-2: #1c3654;
+      --blue: #2864dc;
+      --blue-soft: #eaf1ff;
+      --cyan: #27b7c9;
+      --ink: #1c2735;
+      --muted: #617083;
+      --line: #dce4ee;
+      --paper: #ffffff;
+      --canvas: #eef2f7;
+      --soft: #f6f8fb;
+      --green: #1e8a69;
+      --shadow: 0 18px 55px rgba(18, 36, 58, .10);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: inherit; }
+    .topbar {
+      background: var(--navy);
+      color: #fff;
+      border-bottom: 3px solid var(--cyan);
+    }
+    .topbar-inner {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 15px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: .84rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      color: #7de2ec;
+      font-weight: 900;
+      font-size: .9rem;
+    }
+    .topbar-note { color: #c7d3e2; font-size: .85rem; }
+    .hero {
+      background:
+        radial-gradient(circle at 85% 20%, rgba(39,183,201,.24), transparent 27%),
+        linear-gradient(120deg, var(--navy), var(--navy-2));
+      color: #fff;
+      padding: 72px 0 68px;
+    }
+    .hero-inner, main, .footer-inner {
+      width: min(1000px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+    .eyebrow {
+      display: inline-block;
+      color: #8ee8f0;
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    h1 {
+      max-width: 850px;
+      margin: 0;
+      font-size: clamp(2.2rem, 5.2vw, 4.1rem);
+      line-height: 1.08;
+      letter-spacing: -.045em;
+    }
+    .hero-subtitle {
+      max-width: 760px;
+      margin: 24px 0 0;
+      color: #d9e5f2;
+      font-size: 1.12rem;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 30px;
+    }
+    .hero-meta span {
+      border: 1px solid rgba(255,255,255,.23);
+      background: rgba(255,255,255,.07);
+      border-radius: 100px;
+      padding: 7px 13px;
+      font-size: .8rem;
+      color: #edf5ff;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+      padding: 42px 0 64px;
+    }
+    .toc {
+      position: sticky;
+      top: 20px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 16px;
+      box-shadow: 0 8px 28px rgba(18,36,58,.04);
+    }
+    .toc h2 {
+      margin: 0 0 12px;
+      color: var(--navy);
+      font-size: .76rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .toc a {
+      display: block;
+      padding: 7px 9px;
+      border-radius: 7px;
+      color: var(--muted);
+      font-size: .87rem;
+      text-decoration: none;
+      line-height: 1.4;
+    }
+    .toc a:hover { background: var(--blue-soft); color: var(--blue); }
+    article {
+      min-width: 0;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .document-content { padding: clamp(24px, 5vw, 54px); }
+    .section {
+      padding-bottom: 35px;
+      margin-bottom: 35px;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 24px;
+    }
+    .section:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+    .section-number {
+      display: inline-block;
+      color: var(--blue);
+      font-size: .76rem;
+      letter-spacing: .13em;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+    h2.section-title {
+      color: var(--navy);
+      font-size: clamp(1.35rem, 2.4vw, 1.8rem);
+      line-height: 1.25;
+      letter-spacing: -.025em;
+      margin: 0 0 17px;
+    }
+    h3 {
+      color: var(--navy-2);
+      font-size: 1.05rem;
+      margin: 24px 0 8px;
+    }
+    p { margin: 0 0 15px; }
+    p:last-child { margin-bottom: 0; }
+    .lead {
+      font-size: 1.06rem;
+      color: #35465a;
+    }
+    .callout {
+      border-left: 4px solid var(--cyan);
+      background: #f0fbfc;
+      padding: 18px 20px;
+      border-radius: 0 10px 10px 0;
+      margin: 20px 0;
+    }
+    .callout strong { color: var(--navy); }
+    .objective {
+      background: var(--blue-soft);
+      border: 1px solid #d7e4ff;
+      border-radius: 12px;
+      padding: 22px;
+      color: #233c68;
+      font-size: 1.04rem;
+    }
+    .equipment-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+    .equipment {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+    .equipment h3 { margin: 0 0 8px; font-size: 1rem; }
+    .equipment p { color: var(--muted); font-size: .91rem; }
+    .equipment .tag {
+      display: inline-block;
+      color: var(--blue);
+      background: var(--blue-soft);
+      padding: 4px 8px;
+      font-size: .72rem;
+      font-weight: 800;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    .equipment ul, .check-list, .plain-list {
+      margin: 8px 0 0;
+      padding-left: 20px;
+    }
+    li { margin: 5px 0; }
+    .architecture {
+      margin: 22px 0;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      align-items: stretch;
+    }
+    .arch-step {
+      position: relative;
+      border-radius: 10px;
+      padding: 14px 10px;
+      min-height: 105px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      background: var(--soft);
+      border: 1px solid var(--line);
+    }
+    .arch-step:not(:last-child)::after {
+      content: "›";
+      position: absolute;
+      right: -9px;
+      top: 34%;
+      z-index: 2;
+      width: 18px;
+      height: 24px;
+      color: var(--blue);
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: white;
+      line-height: 20px;
+    }
+    .arch-step strong { color: var(--navy); font-size: .86rem; line-height: 1.3; }
+    .arch-step span { color: var(--muted); font-size: .75rem; margin-top: 6px; }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 0;
+      font-size: .9rem;
+    }
+    .data-table th, .data-table td {
+      text-align: left;
+      padding: 12px 13px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    .data-table th {
+      background: var(--navy);
+      color: white;
+      font-weight: 700;
+    }
+    .data-table tr:nth-child(even) td { background: #f8fafd; }
+    .data-table td:first-child { font-weight: 700; color: var(--navy-2); }
+    .footer {
+      background: var(--navy);
+      color: #c7d3e2;
+      padding: 25px 0;
+      font-size: .85rem;
+    }
+    .footer-inner { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .footer strong { color: white; }
+    .print-button {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,.3);
+      background: rgba(255,255,255,.08);
+      color: white;
+      padding: 9px 13px;
+      border-radius: 8px;
+      cursor: pointer;
+      font: inherit;
+    }
+    .print-button:hover { background: rgba(255,255,255,.16); }
+    @media (max-width: 850px) {
+      .layout { grid-template-columns: 1fr; }
+      .toc { position: static; }
+      .toc nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+      .architecture { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .arch-step:not(:last-child)::after { display: none; }
+    }
+    @media (max-width: 560px) {
+      .hero { padding: 48px 0; }
+      .hero-inner, main, .footer-inner, .topbar-inner { width: min(100% - 28px, 1000px); }
+      .topbar-note { display: none; }
+      .equipment-grid { grid-template-columns: 1fr; }
+      .toc nav { grid-template-columns: 1fr; }
+      .architecture { grid-template-columns: 1fr; }
+      .data-table { font-size: .82rem; }
+      .data-table th, .data-table td { padding: 9px 8px; }
+    }
+    @media print {
+      body { background: white; font-size: 10.5pt; }
+      .topbar, .toc, .print-button { display: none !important; }
+      .hero { padding: 28px 0; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .hero-inner, main, .footer-inner { width: 100%; }
+      .layout { display: block; padding: 18px 0; }
+      article { box-shadow: none; border: 0; }
+      .document-content { padding: 0; }
+      .section { break-inside: avoid; }
+      .equipment { break-inside: avoid; }
+      .footer { margin-top: 20px; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      a { text-decoration: none; }
+    }
+
+    /* Documentação da API — estilos compatíveis com o tema original */
+    .api-base {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 20px 0;
+      padding: 16px;
+      border: 1px solid #c9dcff;
+      border-radius: 10px;
+      background: var(--blue-soft);
+    }
+    .api-label {
+      color: var(--blue);
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .1em;
+    }
+    .api-base code {
+      flex: 1;
+      min-width: 180px;
+      overflow-wrap: anywhere;
+      color: var(--navy);
+      font-weight: 800;
+    }
+    .api-copy {
+      border: 0;
+      border-radius: 7px;
+      padding: 9px 12px;
+      background: var(--blue);
+      color: #fff;
+      font: inherit;
+      font-size: .8rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .api-copy:hover { filter: brightness(1.08); }
+    .endpoint-line {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 14px 0;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--soft);
+    }
+    .endpoint-line code {
+      overflow-wrap: anywhere;
+      color: var(--navy);
+      font-weight: 800;
+    }
+    .http-method {
+      display: inline-block;
+      min-width: 55px;
+      padding: 4px 8px;
+      border-radius: 5px;
+      text-align: center;
+      font-size: .72rem;
+      font-weight: 900;
+    }
+    .http-method.get { background: #dcfce7; color: #166534; }
+    .http-method.post { background: #dbeafe; color: #1d4ed8; }
+    .api-code {
+      max-width: 100%;
+      overflow-x: auto;
+      margin: 10px 0 16px;
+      padding: 17px;
+      border-radius: 9px;
+      background: #101b2a;
+      color: #e4edf7;
+      font-size: .82rem;
+      line-height: 1.75;
+      white-space: pre;
+    }
+    .api-small-note {
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: var(--soft);
+      color: var(--muted);
+      font-size: .86rem;
+    }
+    .api-machine-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+      margin: 12px 0 18px;
+    }
+    .api-machine-grid code {
+      overflow-wrap: anywhere;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      color: var(--blue);
+      font-size: .82rem;
+    }
+    .api-warning {
+      margin-top: 22px;
+      padding: 17px 19px;
+      border-left: 4px solid #dc2626;
+      border-radius: 0 9px 9px 0;
+      background: #fef2f2;
+      color: #991b1b;
+    }
+    @media (max-width: 560px) {
+      .api-base { align-items: flex-start; flex-direction: column; }
+      .api-base code { min-width: 0; width: 100%; }
+      .api-machine-grid { grid-template-columns: 1fr; }
+      .api-code { font-size: .74rem; }
+    }
+    @media print {
+      .api-copy { display: none !important; }
+      .api-code { white-space: pre-wrap; overflow-wrap: anywhere; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .api-base, .api-warning { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span>Projeto Integrador III</span>
+      </div>
+      <div class="topbar-note">Descritivo técnico · Indústria simulada</div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <h1>Sistema Integrado de Análise e Gerenciamento de Dados Industriais</h1>
+      <p class="hero-subtitle">Uma solução tecnológica para integrar informações de uma indústria simulada, investigar problemas operacionais e transformar dados em subsídios para decisões relacionadas à produção, à manutenção e à logística.</p>
+    </div>
+  </section>
+
+  <main class="layout">
+    <aside class="toc" aria-label="Índice do documento">
+      <h2>Neste documento</h2>
+      <nav>
+        <a href="#descricao">01. Descrição geral</a>
+        <a href="#objetivo">02. Objetivo geral</a>
+        <a href="#problema">03. Situação-problema</a>
+        <a href="#desafio">04. Desafio proposto</a>
+        <a href="#requisitos">05. Requisitos gerais</a>
+        <a href="#resultados">06. Resultados esperados</a>
+        <a href="#documentacao-api">07. Documentação da API</a>
+      </nav>
+    </aside>
+
+    <article>
+      <div class="document-content">
+        <section class="section" id="descricao">
+          <span class="section-number">Seção 01</span>
+          <h2 class="section-title">Descrição geral</h2>
+          <p class="lead">O projeto consiste no desenvolvimento de uma solução integrada para análise e gerenciamento de dados provenientes de uma indústria simulada, composta por diferentes máquinas, setores e etapas de um processo produtivo. A solução deverá reproduzir desafios encontrados em ambientes industriais reais, considerando a necessidade de integrar informações, monitorar operações e apoiar decisões estratégicas e operacionais.</p>
+
+          <p>O ambiente industrial disponibilizará informações relacionadas à produção, manutenção, logística, qualidade e condições operacionais dos equipamentos. Esses dados poderão apresentar diferentes formatos, frequências de atualização e níveis de relevância, exigindo mecanismos de organização, integração e análise.</p>
+
+          <div class="callout">
+            <strong>Problema central</strong>
+            <p>A fragmentação dos dados industriais e a ausência de uma visão integrada dos processos dificultam o acompanhamento da operação, a identificação das causas de falhas, a análise de produtividade e a avaliação dos impactos que uma ocorrência pode provocar nas demais etapas da produção.</p>
+          </div>
+
+          <p>A equipe responsável pelo projeto deverá investigar o cenário industrial apresentado, identificar as principais limitações do gerenciamento atual e desenvolver uma solução computacional capaz de centralizar, correlacionar e interpretar os dados disponíveis. A solução deverá transformar registros operacionais em informações úteis, permitindo identificar padrões, acompanhar indicadores e fundamentar decisões relacionadas à produção, à manutenção e à logística industrial.</p>
+
+          <p>O desenvolvimento da solução exigirá a integração de conhecimentos de sistemas de apoio à gestão, processos logísticos, gestão da produção, gestão da manutenção industrial, tecnologias da informação e comunicação aplicadas à Indústria 4.0, inteligência artificial, Data Mining, visualização de dados e segurança da informação.</p>
+        </section>
+
+        <section class="section" id="objetivo">
+          <span class="section-number">Seção 02</span>
+          <h2 class="section-title">Objetivo geral</h2>
+          <div class="objective">
+            Desenvolver uma solução integrada para análise e gerenciamento de dados de uma indústria simulada, capaz de superar a fragmentação das informações operacionais por meio da integração de dados de diferentes máquinas e etapas produtivas, da identificação de padrões e anomalias e da geração de indicadores que contribuam para o monitoramento dos processos e a tomada de decisão.
+          </div>
+        </section>
+
+        <section class="section" id="problema">
+          <span class="section-number">Seção 03</span>
+          <h2 class="section-title">Situação-problema</h2>
+
+          <p>Uma indústria enfrenta dificuldades para gerenciar seus processos produtivos devido à falta de integração entre as máquinas e à ausência de uma visão centralizada das informações operacionais. Cada etapa do processo gera dados específicos, relacionados à quantidade produzida, às condições de funcionamento, às falhas, às paradas, às manutenções e à qualidade dos produtos.</p>
+
+          <p>A falta de integração dessas informações impede uma análise abrangente do desempenho industrial, dificultando a identificação das causas de perdas produtivas, a investigação de falhas recorrentes e a avaliação dos impactos de uma ocorrência sobre as demais etapas do processo.</p>
+
+          <p>Além disso, os responsáveis pela produção e pela manutenção não dispõem de informações consolidadas suficientes para identificar tendências, priorizar intervenções, avaliar riscos operacionais e fundamentar decisões relacionadas à eficiência dos processos.</p>
+
+          <p>Diante desse cenário, a equipe responsável pela solução deverá investigar os dados disponibilizados, identificar relações entre as variáveis operacionais e propor uma arquitetura tecnológica capaz de integrar as informações e apoiar o gerenciamento da indústria. A solução deverá demonstrar como a análise sistemática dos dados pode contribuir para a identificação de problemas e para a melhoria do desempenho operacional.</p>
+        </section>
+
+        <section class="section" id="desafio">
+          <span class="section-number">Seção 04</span>
+          <h2 class="section-title">Desafio proposto</h2>
+
+          <div class="callout">
+            <strong>Questão norteadora</strong>
+            <p>Como desenvolver uma solução tecnológica capaz de integrar dados de diferentes máquinas e etapas de uma indústria, identificar problemas operacionais, avaliar seus impactos sobre o processo produtivo e fornecer informações confiáveis para apoiar decisões de produção, manutenção e logística?</p>
+          </div>
+
+          <p>O desafio consiste em projetar, implementar e validar uma solução tecnológica que reproduza o funcionamento de um sistema integrado de análise industrial. A equipe deverá trabalhar com os dados disponibilizados, definir estratégias de integração e armazenamento, estabelecer indicadores relevantes e desenvolver recursos para investigar falhas, perdas produtivas e possíveis relações entre diferentes variáveis operacionais.</p>
+
+          <p>A solução deverá ir além da simples exibição de registros: será necessário demonstrar como os dados podem ser transformados em informações relevantes para a operação, permitindo identificar situações críticas, comparar desempenhos, reconhecer tendências e fundamentar recomendações de melhoria.</p>
+        </section>
+
+        <section class="section" id="requisitos">
+          <span class="section-number">Seção 05</span>
+          <h2 class="section-title">Requisitos gerais da solução</h2>
+
+          <div class="equipment-grid">
+            <div class="equipment">
+              <span class="tag">01 · Integração</span>
+              <h3>Integração das informações</h3>
+              <p>Integrar dados provenientes de diferentes máquinas e etapas do ambiente industrial simulado, estabelecendo uma visão consolidada dos processos e permitindo relacionar ocorrências entre diferentes setores.</p>
+            </div>
+
+            <div class="equipment">
+              <span class="tag">02 · Dados</span>
+              <h3>Armazenamento e organização</h3>
+              <p>Definir uma estrutura de armazenamento que permita organizar, consultar, relacionar e recuperar os registros operacionais, preservando a consistência e a rastreabilidade das informações.</p>
+            </div>
+
+            <div class="equipment">
+              <span class="tag">03 · Análise</span>
+              <h3>Análise de dados</h3>
+              <p>Investigar os dados disponíveis para identificar padrões, tendências, anomalias e possíveis correlações entre variáveis operacionais, utilizando métodos compatíveis com as características e a qualidade dos dados.</p>
+            </div>
+
+            <div class="equipment">
+              <span class="tag">04 · Produção</span>
+              <h3>Gestão da produção</h3>
+              <p>Monitorar indicadores de produtividade, volume produzido, perdas e interrupções, identificando situações que possam comprometer o cumprimento das metas de produção.</p>
+            </div>
+
+            <div class="equipment">
+              <span class="tag">05 · Manutenção</span>
+              <h3>Gestão da manutenção</h3>
+              <p>Analisar o histórico de ocorrências, os períodos de inatividade e as condições operacionais dos equipamentos para identificar falhas recorrentes e possíveis fatores associados às interrupções.</p>
+            </div>
+
+            <div class="equipment">
+              <span class="tag">06 · Logística</span>
+              <h3>Análise logística</h3>
+              <p>Investigar como paradas, atrasos e variações no volume produzido podem afetar o fluxo de materiais, a disponibilidade de recursos e a continuidade das etapas seguintes do processo.</p>
+            </div>
+
+            <div class="equipment">
+              <span class="tag">07 · Visualização</span>
+              <h3>Visualização de dados</h3>
+              <p>Desenvolver painéis gerenciais que apresentem indicadores, tabelas, gráficos e informações consolidadas, permitindo acompanhar o desempenho industrial e investigar situações que exijam atenção.</p>
+            </div>
+
+            <div class="equipment">
+              <span class="tag">08 · Inteligência</span>
+              <h3>Inteligência artificial</h3>
+              <p>Avaliar e implementar, quando viável, técnicas de inteligência artificial para classificação de ocorrências, identificação de anomalias ou estimativa de riscos operacionais, justificando a escolha dos métodos e suas limitações.</p>
+            </div>
+
+            <div class="equipment">
+              <span class="tag">09 · Proteção</span>
+              <h3>Segurança da informação</h3>
+              <p>Definir e aplicar medidas de segurança para proteger os dados, controlar o acesso às funcionalidades e preservar a confidencialidade, a integridade e a disponibilidade das informações.</p>
+            </div>
+
+            <div class="equipment">
+              <span class="tag">10 · Decisão</span>
+              <h3>Apoio à decisão</h3>
+              <p>Converter os resultados das análises em conclusões e recomendações fundamentadas, permitindo que os responsáveis pela operação identifiquem prioridades e avaliem oportunidades de melhoria.</p>
+            </div>
+          </div>
+
+          <h3>Fluxo conceitual da solução</h3>
+          <p>A solução deverá estabelecer um fluxo de processamento capaz de transformar dados operacionais provenientes de diferentes fontes em informações estruturadas, indicadores confiáveis e recomendações úteis para o gerenciamento industrial.</p>
+
+          <div class="architecture" aria-label="Fluxo conceitual da solução">
+            <div class="arch-step">
+              <strong>Dados industriais</strong>
+              <span>Máquinas e processos</span>
+            </div>
+            <div class="arch-step">
+              <strong>Integração</strong>
+              <span>Recebimento e organização</span>
+            </div>
+            <div class="arch-step">
+              <strong>Armazenamento</strong>
+              <span>Histórico consultável</span>
+            </div>
+            <div class="arch-step">
+              <strong>Análise</strong>
+              <span>Padrões e indicadores</span>
+            </div>
+            <div class="arch-step">
+              <strong>Decisão</strong>
+              <span>Painel e recomendações</span>
+            </div>
+          </div>
+
+          <h3>Relação com as unidades curriculares</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Unidade curricular</th>
+                <th>Aplicação no projeto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Sistemas de Apoio à Gestão</td>
+                <td>Definição de indicadores e consolidação de informações para decisões gerenciais.</td>
+              </tr>
+              <tr>
+                <td>Processos Logísticos</td>
+                <td>Análise dos impactos de paradas e problemas operacionais sobre o fluxo de materiais.</td>
+              </tr>
+              <tr>
+                <td>Fundamentos da Gestão da Produção Industrial</td>
+                <td>Monitoramento da produtividade, das perdas e do desempenho dos equipamentos.</td>
+              </tr>
+              <tr>
+                <td>Fundamentos da Gestão da Manutenção Industrial</td>
+                <td>Análise de ocorrências, paradas e condições operacionais para investigar falhas recorrentes.</td>
+              </tr>
+              <tr>
+                <td>TIC Aplicadas à Indústria 4.0</td>
+                <td>Integração tecnológica, comunicação e organização dos dados industriais.</td>
+              </tr>
+              <tr>
+                <td>Inteligência Artificial</td>
+                <td>Aplicação de técnicas para classificação de ocorrências, identificação de anomalias ou estimativa de riscos.</td>
+              </tr>
+              <tr>
+                <td>Data Mining</td>
+                <td>Exploração dos dados, análise de correlações e descoberta de padrões relevantes.</td>
+              </tr>
+              <tr>
+                <td>Visualização de Dados</td>
+                <td>Construção de gráficos, indicadores e painéis para interpretação das informações operacionais.</td>
+              </tr>
+              <tr>
+                <td>Segurança da Informação</td>
+                <td>Proteção dos dados, controle de acesso e preservação da integridade das informações.</td>
+              </tr>
+              <tr>
+                <td>Projeto Integrador III</td>
+                <td>Integração das competências técnicas em uma solução aplicada a um problema industrial.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+
+        <section class="section" id="documentacao-api">
+          <span class="section-number">Seção 07</span>
+          <h2 class="section-title">Documentação da API industrial</h2>
+
+          <p class="lead">A API disponibiliza leituras de máquinas industriais por meio de requisições HTTP. A equipe deverá consumir essas informações, armazená-las de forma persistente e utilizá-las nas análises do projeto.</p>
+
+          <div class="api-base">
+            <span class="api-label">URL BASE</span>
+            <code id="api-base-url">http://10.69.18.92:8080</code>
+            <button class="api-copy" type="button" onclick="copiarUrlAPI()">Copiar URL</button>
+          </div>
+
+          <div class="callout">
+            <strong>Conexão pela rede local</strong>
+            <p>O endereço acima utiliza o IP local informado para o servidor. Confirme que esse IP continua atribuído ao computador que executa a API. Os computadores das equipes precisam estar na mesma rede ou ter uma rota de rede até o servidor, e a porta 8080 deve estar liberada no firewall.</p>
+          </div>
+
+          <h3>1. Verificar o estado da API</h3>
+          <div class="endpoint-line"><span class="http-method get">GET</span><code>/status</code></div>
+          <p>Retorna informações sobre o funcionamento do serviço e a quantidade de leituras que estão atualmente disponíveis em memória.</p>
+          <h4>Exemplo de requisição</h4>
+          <pre class="api-code"><code>GET /status HTTP/1.1
+Host: 10.69.18.92:8080</code></pre>
+          <h4>Exemplo de resposta</h4>
+          <pre class="api-code"><code>{
+  "online": true,
+  "leituras": 12,
+  "limpezaEmSegundos": 60
+}</code></pre>
+          <p class="api-small-note">Os nomes dos campos da resposta devem corresponder à implementação real da rota /status no servidor.</p>
+
+          <h3>2. Consultar todas as leituras</h3>
+          <div class="endpoint-line"><span class="http-method get">GET</span><code>/maquinas</code></div>
+          <p>Retorna todas as leituras que ainda estão armazenadas na memória temporária da API. Este é o endpoint principal para as equipes coletarem os dados.</p>
+          <h4>Exemplo de requisição</h4>
+          <pre class="api-code"><code>GET /maquinas HTTP/1.1
+Host: 10.69.18.92:8080</code></pre>
+          <h4>Exemplo de resposta</h4>
+          <pre class="api-code"><code>[
+  {
+    "id": 1,
+    "timestamp": "2026-10-19T12:30:00.000Z",
+    "maquina": "TORNO_CNC_01",
+    "temperatura": 72.5,
+    "vibracao": 3.2,
+    "producao": 145,
+    "status": "operando"
+  },
+  {
+    "id": 2,
+    "timestamp": "2026-10-19T12:30:05.000Z",
+    "maquina": "PRENSA_HIDRAULICA_01",
+    "temperatura": 68.1,
+    "pressao": 120,
+    "producao": 98,
+    "status": "operando"
+  }
+]</code></pre>
+          <p class="api-small-note">Os valores e campos acima são ilustrativos. A estrutura real depende das informações enviadas pelas máquinas.</p>
+
+          <h3>3. Consultar leituras de uma máquina específica</h3>
+          <div class="endpoint-line"><span class="http-method get">GET</span><code>/maquinas/:maquina</code></div>
+          <p>Filtra as leituras pelo identificador da máquina informado no endereço da requisição.</p>
+          <h4>Exemplo de requisição</h4>
+          <pre class="api-code"><code>GET /maquinas/TORNO_CNC_01 HTTP/1.1
+Host: 10.69.18.92:8080</code></pre>
+
+          <h4>Identificadores de máquinas aceitos</h4>
+          <div class="api-machine-grid">
+            <code>TORNO_CNC_01</code>
+            <code>PRENSA_HIDRAULICA_01</code>
+            <code>ESTEIRA_01</code>
+            <code>ROBO_SOLDAGEM_01</code>
+            <code>COMPRESSOR_01</code>
+            <code>EMBALADORA_01</code>
+          </div>
+
+          <h4>Exemplo de resposta</h4>
+          <pre class="api-code"><code>[
+  {
+    "id": 1,
+    "timestamp": "2026-10-19T12:30:00.000Z",
+    "maquina": "TORNO_CNC_01",
+    "temperatura": 72.5,
+    "vibracao": 3.2,
+    "producao": 145,
+    "status": "operando"
+  }
+]</code></pre>
+
+          <h3>4. Exportar as leituras em CSV</h3>
+          <div class="endpoint-line"><span class="http-method get">GET</span><code>/maquinas/csv</code></div>
+          <p>Disponibiliza as leituras atuais em formato CSV, adequado para abrir em planilhas eletrônicas ou importar em outras ferramentas.</p>
+          <h4>Endereço completo</h4>
+          <pre class="api-code"><code>http://10.69.18.92:8080/maquinas/csv</code></pre>
+          <h4>Exemplo de conteúdo</h4>
+          <pre class="api-code"><code>id;timestamp;maquina;temperatura;vibracao;producao;status
+1;2026-10-19T12:30:00.000Z;TORNO_CNC_01;72.5;3.2;145;operando
+2;2026-10-19T12:30:05.000Z;PRENSA_HIDRAULICA_01;68.1;;98;operando</code></pre>
+          <p class="api-small-note">Esta rota precisa estar implementada na versão da API utilizada. O CSV é gerado com os dados disponíveis no momento da requisição; não é um histórico permanente.</p>
+
+          <h3>5. Enviar uma leitura para a API</h3>
+          <div class="endpoint-line"><span class="http-method post">POST</span><code>/maquinas</code></div>
+          <p>Recebe uma nova leitura em JSON, atribui um identificador e um timestamp e adiciona o registro à memória temporária. Este endpoint recebe dados; para o desafio de coleta, as equipes devem principalmente consumir as leituras disponibilizadas pela API.</p>
+          <h4>Exemplo de requisição</h4>
+          <pre class="api-code"><code>POST /maquinas HTTP/1.1
+Host: 10.69.18.92:8080
+Content-Type: application/json
+
+{
+  "maquina": "TORNO_CNC_01",
+  "temperatura": 72.5,
+  "vibracao": 3.2,
+  "producao": 145,
+  "status": "operando"
+}</code></pre>
+          <h4>Exemplo de resposta — HTTP 201</h4>
+          <pre class="api-code"><code>{
+  "id": 1,
+  "timestamp": "2026-10-19T12:30:00.000Z",
+  "maquina": "TORNO_CNC_01",
+  "temperatura": 72.5,
+  "vibracao": 3.2,
+  "producao": 145,
+  "status": "operando"
+}</code></pre>
+
+          <h3>Responsabilidades da equipe</h3>
+          <ul class="check-list">
+            <li>Realizar requisições HTTP para consumir os dados da API.</li>
+            <li>Definir uma frequência de coleta que evite perder leituras.</li>
+            <li>Armazenar os dados de forma persistente, usando banco de dados ou outra estrutura adequada.</li>
+            <li>Tratar falhas de conexão, respostas inesperadas e dados inválidos.</li>
+            <li>Considerar duplicidades e utilizar o identificador e o timestamp quando apropriado.</li>
+            <li>Construir análises, indicadores e visualizações a partir dos dados coletados.</li>
+          </ul>
+
+          <div class="api-warning">
+            <strong>Importante — dados temporários:</strong> a API mantém as leituras apenas em memória e pode apagá-las periodicamente. A equipe não deve depender da API como armazenamento permanente. É necessário coletar e persistir os registros antes que sejam removidos. Ajuste a frequência de coleta ao intervalo real de geração das leituras e à rotina de limpeza do servidor.
+          </div>
+        </section>
+
+        <section class="section" id="resultados">
+          <span class="section-number">Seção 06</span>
+          <h2 class="section-title">Resultados esperados</h2>
+
+          <p>Ao final do projeto, a solução deverá demonstrar como a integração e a análise de dados podem contribuir para o gerenciamento de uma indústria simulada, oferecendo uma visão consolidada do comportamento dos equipamentos e dos processos produtivos.</p>
+
+          <p>O sistema deverá permitir acompanhar indicadores operacionais, investigar relações entre produção e manutenção, identificar problemas relevantes e avaliar os possíveis impactos de ocorrências sobre a continuidade da operação e o fluxo logístico.</p>
+
+          <p>Os resultados deverão ser sustentados pelas evidências encontradas nos dados analisados. A equipe deverá apresentar as decisões técnicas adotadas, justificar os métodos utilizados e demonstrar as limitações e os benefícios da solução desenvolvida.</p>
+
+          <h3>Entregáveis previstos</h3>
+          <ul class="check-list">
+            <li>Solução computacional funcional para integração e gerenciamento dos dados industriais.</li>
+            <li>Estrutura de armazenamento documentada, com definição dos dados e de seus relacionamentos.</li>
+            <li>Análises de produção, manutenção e logística baseadas nos dados disponibilizados.</li>
+            <li>Painel de visualização com indicadores relevantes para o acompanhamento operacional.</li>
+            <li>Recurso de Data Mining e, quando tecnicamente viável, funcionalidade de inteligência artificial.</li>
+            <li>Mecanismos de segurança e documentação das medidas implementadas.</li>
+            <li>Relatório técnico contendo arquitetura da solução, metodologia, análises, resultados, limitações e recomendações.</li>
+            <li>Demonstração prática da solução, com apresentação de cenários investigados e evidências que sustentem as conclusões.</li>
+          </ul>
+        </section>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Projeto Integrador III</strong><br>
+        Descritivo técnico · Sistema Integrado de Análise e Gerenciamento de Dados Industriais
+      </div>
+      <button class="print-button" onclick="window.print()">Imprimir / Salvar em PDF</button>
+    </div>
+  </footer>
+
+  <script>
+    function copiarUrlAPI() {
+      const elemento = document.getElementById("api-base-url");
+      const url = elemento.textContent.trim();
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url)
+          .then(() => alert("URL da API copiada!"))
+          .catch(() => copiarUrlAlternativo(url));
+      } else {
+        copiarUrlAlternativo(url);
+      }
+    }
+
+    function copiarUrlAlternativo(texto) {
+      const campo = document.createElement("textarea");
+      campo.value = texto;
+      campo.setAttribute("readonly", "");
+      campo.style.position = "fixed";
+      campo.style.left = "-9999px";
+      document.body.appendChild(campo);
+      campo.select();
+
+      try {
+        const sucesso = document.execCommand("copy");
+        alert(sucesso ? "URL da API copiada!" : "Copie manualmente: " + texto);
+      } catch (erro) {
+        alert("Copie manualmente: " + texto);
+      }
+
+      campo.remove();
+    }
+  </script>
+
+</body>
+</html>

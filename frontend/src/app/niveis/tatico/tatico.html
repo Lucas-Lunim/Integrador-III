@@ -1,0 +1,147 @@
+<main class="pagina">
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="nivel-tag">Nível tático</span>
+      <h1>Desempenho por {{ granularidade() === 'semana' ? 'semana' : 'mês' }}</h1>
+      <p>Produção, perdas e disponibilidade de cada máquina, calculadas dos resumos. O período atual ainda está em andamento.</p>
+    </div>
+  </div>
+
+  <section class="filtros" aria-label="Filtros">
+    <div class="campo">
+      <span>Período</span>
+      <div class="segmentado" role="group" aria-label="Granularidade">
+        <button type="button" [class.ativo]="granularidade() === 'semana'" (click)="granularidade.set('semana')">Semanal</button>
+        <button type="button" [class.ativo]="granularidade() === 'mes'" (click)="granularidade.set('mes')">Mensal</button>
+      </div>
+    </div>
+    <div class="campo">
+      <label for="filtro-maquina">Máquina</label>
+      <select id="filtro-maquina" [value]="maquina()" (change)="trocarMaquina($event)">
+        <option value="">Todas</option>
+        @for (m of opcoesMaquinas(); track m) {
+          <option [value]="m">{{ catalogo.nomeMaquina(m) }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo periodos">
+      <span>Ver</span>
+      <div class="segmentado" role="group" aria-label="Período">
+        @for (r of rotulos(); track $index) {
+          <button type="button" [class.ativo]="periodo() === $index" (click)="escolhido.set($index)">{{ r }}</button>
+        }
+      </div>
+    </div>
+  </section>
+
+  @if (erro(); as e) {
+    <div class="aviso erro">{{ e }}</div>
+  }
+  @if (resumo().cobertura != null && resumo().cobertura! < 0.5) {
+    <div class="aviso">
+      Os dados cobrem {{ percentual(resumo().cobertura) }} de {{ titulo() }}: o coletor não estava ligado o tempo todo.
+      Somas como produção e horas refletem só o tempo observado.
+    </div>
+  }
+
+  <h2 class="subtitulo">{{ titulo() }}</h2>
+  <section class="indicadores" aria-label="Indicadores do período">
+    <div class="indicador">
+      <div class="rotulo">Produção</div>
+      <div class="valor">{{ inteiro(resumo().producao) }}</div>
+      <div class="detalhe">
+        peças boas
+        @if (resumo().producaoVariacao != null) {
+          · {{ resumo().producaoVariacao! >= 0 ? '+' : '' }}{{ percentual(resumo().producaoVariacao) }} vs. anterior
+        }
+      </div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Taxa de perdas</div>
+      <div class="valor">{{ percentual(resumo().taxaPerdas, 2) }}</div>
+      <div class="detalhe">{{ inteiro(resumo().perdas) }} defeitos e rejeitos</div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Disponibilidade</div>
+      <div class="valor">{{ percentual(resumo().disponibilidade) }}</div>
+      <div class="detalhe">do tempo observado em operação</div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Manutenção</div>
+      <div class="valor">{{ horas(resumo().horasManutencao) }}</div>
+      <div class="detalhe">somando as máquinas</div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Paradas</div>
+      <div class="valor">{{ horas(resumo().horasParada) }}</div>
+      <div class="detalhe">somando as máquinas</div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Cobertura dos dados</div>
+      <div class="valor">{{ percentual(resumo().cobertura) }}</div>
+      <div class="detalhe">do período com leituras</div>
+    </div>
+  </section>
+
+  <div class="grade-2">
+    <section class="cartao">
+      <h2>Produção por período</h2>
+      <p class="descricao">Peças boas no período (variação do contador "produção").</p>
+      @if (graficoProducao(); as opcoes) {
+        <app-grafico [opcoes]="opcoes" [altura]="280" descricao="Produção por período e por máquina" />
+      } @else {
+        <div class="vazio">Sem produção registrada nestes períodos.</div>
+      }
+    </section>
+    <section class="cartao">
+      <h2>Disponibilidade por período</h2>
+      <p class="descricao">Tempo em operação ÷ tempo com status conhecido.</p>
+      @if (graficoDisponibilidade(); as opcoes) {
+        <app-grafico [opcoes]="opcoes" [altura]="280" descricao="Disponibilidade por período e por máquina" />
+      } @else {
+        <div class="vazio">Sem tempo observado nestes períodos.</div>
+      }
+    </section>
+  </div>
+
+  <section class="cartao tabela-maquinas">
+    <h2>Máquinas · {{ titulo() }}</h2>
+    <p class="descricao">Robô de soldagem não informa produção: a coluna mostra os ciclos.</p>
+    <div class="tabela-rolagem">
+      <table class="dados">
+        <thead>
+          <tr>
+            <th>Máquina</th>
+            <th class="n">Produção</th>
+            <th class="n">Perdas</th>
+            <th class="n">Taxa de perdas</th>
+            <th class="n">Disponib.</th>
+            <th class="n">Manutenção</th>
+            <th class="n">Parada</th>
+            <th class="n">Temp. média / máx.</th>
+            <th class="n">Vibração média</th>
+            <th class="n">Desgaste +</th>
+            <th class="n">Cobertura</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of linhas(); track l.codigo) {
+            <tr>
+              <td><span class="mancha" [style.background]="l.cor"></span>{{ l.nome }}</td>
+              <td class="n">{{ inteiro(l.producao) }} <small class="apagado">{{ l.unidadeProducao }}</small></td>
+              <td class="n">{{ inteiro(l.perdas) }}</td>
+              <td class="n">{{ percentual(l.taxaPerdas, 2) }}</td>
+              <td class="n">{{ percentual(l.disponibilidade) }}</td>
+              <td class="n">{{ horas(l.horasManutencao) }}</td>
+              <td class="n">{{ horas(l.horasParada) }}</td>
+              <td class="n">{{ numero(l.temperaturaMedia, 1) }} / {{ numero(l.temperaturaMax, 1) }}</td>
+              <td class="n">{{ numero(l.vibracaoMedia, 2) }}</td>
+              <td class="n">{{ numero(l.desgaste, 2) }}</td>
+              <td class="n">{{ percentual(l.cobertura) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>

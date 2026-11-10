@@ -1,0 +1,30 @@
+.voltar { display: inline-block; margin-bottom: 10px; font-size: 0.85rem; text-decoration: none; }
+h1 .mancha { width: 12px; height: 12px; margin-right: 10px; }
+h1 small { font-size: 0.8rem; font-weight: 400; margin-left: 8px; }
+.estado { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 0.85rem; }
+
+.faixa-cartao { margin-bottom: 14px; }
+.faixa-topo { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+.faixa-topo h2 { font-size: 1rem; }
+.legenda-status { display: flex; flex-wrap: wrap; gap: 6px; }
+.sem-dados-legenda { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--tinta-2); }
+.sem-dados-legenda span { width: 18px; height: 10px; border-radius: 3px; background: var(--superficie-2); border: 1px dashed var(--eixo); }
+
+.faixa { position: relative; height: 18px; border-radius: 4px; background: var(--superficie-2); overflow: hidden; }
+.trecho { position: absolute; top: 0; bottom: 0; border-right: 2px solid var(--superficie); }
+.trecho.operacao { background: var(--ok); }
+.trecho.atencao { background: var(--atencao); }
+.trecho.manutencao { background: var(--serio); }
+.trecho.parada { background: var(--critico); }
+.trecho.desconhecido { background: var(--apagado); }
+.trecho.sem-dados { background: transparent; }
+
+.graficos { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; margin-bottom: 14px; }
+.grafico-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.grafico-topo h2 { font-size: 0.92rem; }
+.grafico-topo small { font-weight: 400; color: var(--apagado); }
+.etiqueta {
+  font-size: 0.68rem; font-weight: 600; color: var(--tinta-2); border: 1px solid var(--borda);
+  border-radius: 4px; padding: 0 5px; margin-left: 6px; vertical-align: 1px;
+}
+.ultimo { font-size: 1.2rem; font-weight: 700; font-variant-numeric: tabular-nums; }

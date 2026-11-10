@@ -69,7 +69,7 @@ def criar_handler(api_base):
 
 def main():
     parser = argparse.ArgumentParser(description="Servidor local do painel exploratório (proxy da API industrial).")
-    parser.add_argument("--api", default="http://10.107.67.92:8080", help="URL base da API industrial")
+    parser.add_argument("--api", default="http://10.12.22.92:8080", help="URL base da API industrial")
     parser.add_argument("--porta", type=int, default=8000, help="porta local do painel")
     args = parser.parse_args()
 

@@ -1,0 +1,103 @@
+<main class="pagina">
+  <a class="voltar" routerLink="/operacional">← Todas as máquinas</a>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="nivel-tag">Nível operacional</span>
+      <h1>
+        <span class="mancha" [style.background]="catalogo.corMaquina(maquina())"></span>{{ catalogo.nomeMaquina(maquina()) }}
+        <small class="apagado">{{ maquina() }}</small>
+      </h1>
+      @if (atual(); as m) {
+        <p class="estado">
+          <app-status [categoria]="m.categoria" [alerta]="m.alerta" [nome]="m.statusNome" />
+          <span>{{ m.tipoNome }} · {{ m.setor }}</span>
+          <span>Última leitura {{ haQuanto(m.ultimaLeitura, agora()) }}</span>
+          <span>Neste status há {{ desde(m.statusDesde, agora()) }}</span>
+        </p>
+      }
+    </div>
+    <div class="campo">
+      <span>Janela</span>
+      <div class="segmentado" role="group" aria-label="Janela de tempo">
+        @for (j of janelas; track j) {
+          <button type="button" [class.ativo]="janela() === j" (click)="janela.set(j)">{{ j }} min</button>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (erro(); as e) {
+    <div class="aviso erro">{{ e }}</div>
+  }
+
+  <section class="cartao faixa-cartao" aria-label="Status na janela">
+    <div class="faixa-topo">
+      <h2>Status nos últimos {{ janela() }} min</h2>
+      <div class="legenda-status">
+        <app-status categoria="OPERACAO" nome="Operação" />
+        <app-status categoria="OPERACAO" [alerta]="true" nome="Atenção" />
+        <app-status categoria="MANUTENCAO" nome="Manutenção" />
+        <app-status categoria="PARADA" nome="Parada" />
+        <span class="sem-dados-legenda"><span></span>Sem dados</span>
+      </div>
+    </div>
+    <div class="faixa" role="img" aria-label="Linha do tempo de status">
+      @for (t of faixa(); track $index) {
+        <span [class]="'trecho ' + t.classe" [style.left.%]="t.esquerda" [style.width.%]="t.largura" [title]="t.titulo"></span>
+      }
+    </div>
+  </section>
+
+  @if (serie() && graficos().length === 0) {
+    <div class="cartao vazio">Sem leituras desta máquina na janela.</div>
+  }
+
+  <section class="graficos" aria-label="Atributos ao longo do tempo">
+    @for (g of graficos(); track g.codigo) {
+      <div class="cartao grafico">
+        <div class="grafico-topo">
+          <h2>
+            {{ g.rotulo }}
+            @if (g.contador) { <span class="etiqueta">acumulado</span> }
+          </h2>
+          <span class="ultimo">{{ numero(g.ultimo, 3) }}</span>
+        </div>
+        <app-grafico [opcoes]="g.opcoes" [altura]="150" [descricao]="g.nome + ' nos últimos ' + janela() + ' minutos'" />
+      </div>
+    }
+  </section>
+
+  @if (graficos().length) {
+    <section class="cartao">
+      <h2>Resumo da janela</h2>
+      <p class="descricao">Os mesmos dados dos gráficos, em tabela. Para contadores vale a variação na janela.</p>
+      <div class="tabela-rolagem">
+        <table class="dados">
+          <thead>
+            <tr>
+              <th>Atributo</th>
+              <th class="n">Atual</th>
+              <th class="n">Mínimo</th>
+              <th class="n">Média</th>
+              <th class="n">Máximo</th>
+              <th class="n">Variação</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (g of graficos(); track g.codigo) {
+              <tr>
+                <td>{{ g.rotulo }}</td>
+                <td class="n">{{ numero(g.ultimo, 3) }}</td>
+                <td class="n">{{ g.contador ? '—' : numero(g.minimo, 3) }}</td>
+                <td class="n">{{ g.contador ? '—' : numero(g.media, 3) }}</td>
+                <td class="n">{{ g.contador ? '—' : numero(g.maximo, 3) }}</td>
+                <td class="n">{{ g.contador ? '+' + numero(g.variacao, 3) : '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</main>

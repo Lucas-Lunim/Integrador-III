@@ -1,0 +1,13 @@
+# .NET
+bin/
+obj/
+*.user
+
+# Node / Angular
+node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Configuração local com senha (gerada para cada máquina)
+*.local.sql
+appsettings.Local.json

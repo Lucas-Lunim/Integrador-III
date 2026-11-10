@@ -1,0 +1,18 @@
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" routerLink="/">
+      <span class="marca-sigla">PI III</span>
+      <span class="marca-nome">Painel Industrial <small>Setor1</small></span>
+    </a>
+    <nav aria-label="Níveis">
+      <a routerLink="/operacional" routerLinkActive="ativo">Operacional</a>
+      <a routerLink="/tatico" routerLinkActive="ativo">Tático</a>
+      <a routerLink="/estrategico" routerLinkActive="ativo">Estratégico</a>
+    </nav>
+    <span class="situacao" [class]="situacao().classe" [title]="saude()?.apiUrl ?? ''">
+      <span class="ponto" aria-hidden="true"></span>{{ situacao().texto }}
+    </span>
+  </div>
+</header>
+
+<router-outlet />

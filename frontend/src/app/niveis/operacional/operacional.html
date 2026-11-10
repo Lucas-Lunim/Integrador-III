@@ -1,0 +1,86 @@
+<main class="pagina">
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="nivel-tag">Nível operacional</span>
+      <h1>Máquinas agora</h1>
+      <p>Último valor de cada máquina, atualizado a cada leitura. Clique numa máquina para ver a última hora.</p>
+    </div>
+    <span class="ao-vivo" [class.desconectado]="!tempoReal.conectado()">
+      <span class="pulso" aria-hidden="true"></span>
+      {{ tempoReal.conectado() ? 'Ao vivo' : 'Reconectando… (consultando a cada 5 s)' }}
+    </span>
+  </div>
+
+  <section class="indicadores" aria-label="Máquinas por status">
+    <div class="indicador">
+      <div class="rotulo">Em operação</div>
+      <div class="valor">{{ contagem().operacao }}</div>
+      <div class="detalhe"><app-status categoria="OPERACAO" nome="Operando normalmente" /></div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Em atenção</div>
+      <div class="valor">{{ contagem().atencao }}</div>
+      <div class="detalhe"><app-status categoria="OPERACAO" [alerta]="true" nome="Operando com alerta" /></div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Em manutenção</div>
+      <div class="valor">{{ contagem().manutencao }}</div>
+      <div class="detalhe"><app-status categoria="MANUTENCAO" nome="Manutenção" /></div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Paradas</div>
+      <div class="valor">{{ contagem().parada }}</div>
+      <div class="detalhe"><app-status categoria="PARADA" nome="Parada" /></div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Sem dados recentes</div>
+      <div class="valor">{{ contagem().semDados }}</div>
+      <div class="detalhe">Nenhuma leitura no último minuto</div>
+    </div>
+  </section>
+
+  @if (maquinas().length === 0) {
+    <div class="cartao vazio">Aguardando a primeira leitura da API…</div>
+  }
+
+  <section class="maquinas" aria-label="Máquinas">
+    @for (m of maquinas(); track m.codigo) {
+      <a class="cartao maquina" [routerLink]="['/operacional', m.codigo]">
+        <div class="topo-cartao">
+          <div class="identificacao">
+            <span class="mancha" [style.background]="catalogo.corMaquina(m.codigo)"></span>
+            <div>
+              <h2>{{ catalogo.nomeMaquina(m.codigo) }}</h2>
+              <span class="codigo">{{ m.codigo }}</span>
+            </div>
+          </div>
+          <app-status [categoria]="m.categoria" [alerta]="m.alerta" [nome]="m.statusNome" />
+        </div>
+
+        <div class="tempos">
+          <span [class]="'idade ' + atraso(m)">Última leitura {{ haQuanto(m.ultimaLeitura, agora()) }}</span>
+          <span>Neste status há {{ desde(m.statusDesde, agora()) }}</span>
+        </div>
+
+        <dl class="valores">
+          @for (v of valores(m, false); track v.codigo) {
+            <div>
+              <dt>{{ v.rotulo }}</dt>
+              <dd>{{ v.texto }}</dd>
+            </div>
+          }
+        </dl>
+        @if (valores(m, true).length) {
+          <dl class="valores contadores">
+            @for (v of valores(m, true); track v.codigo) {
+              <div>
+                <dt>{{ v.rotulo }}</dt>
+                <dd>{{ v.texto }}</dd>
+              </div>
+            }
+          </dl>
+        }
+      </a>
+    }
+  </section>
+</main>

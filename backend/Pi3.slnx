@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Pi3.Backend/Pi3.Backend.csproj" />
+  <Project Path="Pi3.Simulador/Pi3.Simulador.csproj" />
+</Solution>

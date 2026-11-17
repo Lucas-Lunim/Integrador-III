@@ -1,18 +1,22 @@
-<header class="topo">
-  <div class="topo-interno">
-    <a class="marca" routerLink="/">
-      <span class="marca-sigla">PI III</span>
-      <span class="marca-nome">Painel Industrial <small>Setor1</small></span>
-    </a>
-    <nav aria-label="Níveis">
-      <a routerLink="/operacional" routerLinkActive="ativo">Operacional</a>
-      <a routerLink="/tatico" routerLinkActive="ativo">Tático</a>
-      <a routerLink="/estrategico" routerLinkActive="ativo">Estratégico</a>
-    </nav>
-    <span class="situacao" [class]="situacao().classe" [title]="saude()?.apiUrl ?? ''">
-      <span class="ponto" aria-hidden="true"></span>{{ situacao().texto }}
+<a href="#conteudo" class="skip" (click)="irAoConteudo($event)">Ir para o conteúdo</a>
+<aside class="sidebar">
+  <a class="brand" routerLink="/operacional"><span class="brand-icon" aria-hidden="true"><i></i><i></i><i></i></span><span>Monitor<br> Industrial</span></a>
+  <nav aria-label="Navegação principal">
+    <p>Monitoramento</p>
+    <a routerLink="/operacional" routerLinkActive="active" ariaCurrentWhenActive="page"><span aria-hidden="true">▦</span> Visão geral</a>
+    <a routerLink="/alertas" routerLinkActive="active" ariaCurrentWhenActive="page"><span aria-hidden="true">△</span> Alertas do recorte</a>
+    <p>Análise</p>
+    <a routerLink="/tatico" routerLinkActive="active" ariaCurrentWhenActive="page"><span aria-hidden="true">▥</span> Tático</a>
+    <a routerLink="/estrategico" routerLinkActive="active" ariaCurrentWhenActive="page"><span aria-hidden="true">↗</span> Estratégico</a>
+  </nav>
+  <div class="sidebar-footer"><span class="footer-mark">PI</span><span>Projeto Integrador III</span></div>
+</aside>
+<div class="workspace">
+  <header class="topbar">
+    <span id="breadcrumb">Monitor Industrial / {{ titulo() }}</span>
+    <span class="source-status" [class]="situacao().classe" [title]="situacao().detalhe">
+      <i aria-hidden="true"></i>{{ situacao().texto }}
     </span>
-  </div>
-</header>
-
-<router-outlet />
+  </header>
+  <div id="conteudo" tabindex="-1"><router-outlet /></div>
+</div>

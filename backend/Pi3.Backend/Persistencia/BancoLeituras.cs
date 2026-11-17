@@ -6,12 +6,52 @@ namespace Pi3.Backend.Persistencia;
 
 /// <summary>Estado de uma máquina gravado na tabela maquina (status atual do DER).</summary>
 public readonly record struct EstadoMaquina(int Maquina, int Status, DateTime StatusDesde, DateTime UltimaLeitura);
+public sealed record LeituraHistorica(long Instante, int Status, Dictionary<int, double> Valores);
 
 /// <summary>Gravação e leitura dos fatos brutos (leitura e valor).</summary>
 public static class BancoLeituras
 {
     /// <summary>Linhas por INSERT: cabe folgado no pacote padrão do MySQL.</summary>
     const int Bloco = 400;
+
+    public static async Task<List<LeituraHistorica>> LerHistoricoAsync(MySqlConnection c, int maquina,
+        DateTime? desde, DateTime? ate, CancellationToken ct)
+    {
+        var sql = new StringBuilder("""
+            SELECT l.instante, l.status_id, v.atributo_id, v.valor
+              FROM leitura l
+              LEFT JOIN valor v ON v.instante = l.instante AND v.maquina_id = l.maquina_id
+             WHERE l.maquina_id = @m
+            """);
+        await using var cmd = new MySqlCommand { Connection = c };
+        cmd.Parameters.AddWithValue("@m", maquina);
+        if (desde is { } inicio)
+        {
+            sql.Append(" AND l.instante >= @desde");
+            cmd.Parameters.AddWithValue("@desde", inicio);
+        }
+        if (ate is { } fim)
+        {
+            sql.Append(" AND l.instante <= @ate");
+            cmd.Parameters.AddWithValue("@ate", fim);
+        }
+        cmd.CommandText = sql.Append(" ORDER BY l.instante").ToString();
+
+        await using var r = await cmd.ExecuteReaderAsync(ct);
+        var linhas = new List<LeituraHistorica>();
+        LeituraHistorica? atual = null;
+        while (await r.ReadAsync(ct))
+        {
+            var instante = (r.GetDateTime(0).Ticks - DateTime.UnixEpoch.Ticks) / TimeSpan.TicksPerMillisecond;
+            if (atual is null || atual.Instante != instante)
+            {
+                atual = new LeituraHistorica(instante, r.GetInt32(1), []);
+                linhas.Add(atual);
+            }
+            if (!r.IsDBNull(2)) atual.Valores[r.GetInt32(2)] = r.GetDouble(3);
+        }
+        return linhas;
+    }
 
     /// <summary>Grava o lote inteiro numa transação. INSERT IGNORE: regravar o mesmo lote não duplica nada.</summary>
     public static async Task GravarAsync(MySqlConnection c, Lote l, IReadOnlyList<EstadoMaquina> maquinas, CancellationToken ct)

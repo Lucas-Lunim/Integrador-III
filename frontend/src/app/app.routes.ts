@@ -1,24 +1,13 @@
 import { Routes } from '@angular/router';
 
-// Uma área por nível da pirâmide. Cada uma é carregada separadamente
-// (lazy loading), então o operador não baixa o código do estratégico.
+const monitor = () => import('./niveis/monitor/monitor');
+
 export const routes: Routes = [
-  { path: '', title: 'Painel Industrial · PI III', loadComponent: () => import('./niveis/inicio') },
-  {
-    path: 'operacional',
-    title: 'Operacional · PI III',
-    loadComponent: () => import('./niveis/operacional/operacional'),
-  },
-  {
-    path: 'operacional/:maquina',
-    title: 'Máquina · PI III',
-    loadComponent: () => import('./niveis/operacional/maquina'),
-  },
-  { path: 'tatico', title: 'Tático · PI III', loadComponent: () => import('./niveis/tatico/tatico') },
-  {
-    path: 'estrategico',
-    title: 'Estratégico · PI III',
-    loadComponent: () => import('./niveis/estrategico/estrategico'),
-  },
-  { path: '**', redirectTo: '' },
+  { path: '', pathMatch: 'full', redirectTo: 'operacional' },
+  { path: 'operacional', title: 'Visão geral · Monitor Industrial', data: { tela: 'geral', secao: 'Visão geral' }, loadComponent: monitor },
+  { path: 'operacional/:maquina', title: 'Equipamento · Monitor Industrial', data: { tela: 'maquina', secao: 'Equipamento' }, loadComponent: monitor },
+  { path: 'alertas', title: 'Alertas do recorte · Monitor Industrial', data: { tela: 'alertas', secao: 'Alertas do recorte' }, loadComponent: monitor },
+  { path: 'tatico', title: 'Tático · Monitor Industrial', data: { secao: 'Tático' }, loadComponent: () => import('./niveis/tatico/tatico') },
+  { path: 'estrategico', title: 'Estratégico · Monitor Industrial', data: { secao: 'Estratégico' }, loadComponent: () => import('./niveis/estrategico/estrategico') },
+  { path: '**', redirectTo: 'operacional' },
 ];

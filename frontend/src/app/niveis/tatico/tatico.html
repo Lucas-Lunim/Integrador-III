@@ -26,11 +26,11 @@
     </div>
     <div class="campo periodos">
       <span>Ver</span>
-      <div class="segmentado" role="group" aria-label="Período">
+      <select #periodoControle aria-label="Período" (change)="escolhido.set(+periodoControle.value); paginacao.reiniciar()">
         @for (r of rotulos(); track $index) {
-          <button type="button" [class.ativo]="periodo() === $index" (click)="escolhido.set($index)">{{ r }}</button>
+          <option [value]="$index" [selected]="periodo() === $index">{{ r }}</option>
         }
-      </div>
+      </select>
     </div>
   </section>
 
@@ -83,31 +83,33 @@
     </div>
   </section>
 
-  <div class="grade-2">
-    <section class="cartao">
-      <h2>Produção por período</h2>
-      <p class="descricao">Peças boas no período (variação do contador "produção").</p>
+  @if (graficoProducao() || graficoDisponibilidade()) {
+    <div class="grade-2">
       @if (graficoProducao(); as opcoes) {
+        <section class="cartao">
+          <h2>Produção por período</h2>
+          <p class="descricao">Peças boas no período (variação do contador "produção").</p>
         <app-grafico [opcoes]="opcoes" [altura]="280" descricao="Produção por período e por máquina" />
-      } @else {
-        <div class="vazio">Sem produção registrada nestes períodos.</div>
+        </section>
       }
-    </section>
-    <section class="cartao">
-      <h2>Disponibilidade por período</h2>
-      <p class="descricao">Tempo em operação ÷ tempo com status conhecido.</p>
       @if (graficoDisponibilidade(); as opcoes) {
+        <section class="cartao">
+          <h2>Disponibilidade por período</h2>
+          <p class="descricao">Tempo em operação ÷ tempo com status conhecido.</p>
         <app-grafico [opcoes]="opcoes" [altura]="280" descricao="Disponibilidade por período e por máquina" />
-      } @else {
-        <div class="vazio">Sem tempo observado nestes períodos.</div>
+        </section>
       }
-    </section>
-  </div>
+    </div>
+  } @else if (planta()) {
+    <p class="panel empty">Nenhum dado disponível para os gráficos deste recorte.</p>
+  }
 
   <section class="cartao tabela-maquinas">
-    <h2>Máquinas · {{ titulo() }}</h2>
-    <p class="descricao">Robô de soldagem não informa produção: a coluna mostra os ciclos.</p>
-    <div class="tabela-rolagem">
+    <header class="grid-table-title">
+      <h2>Máquinas · {{ titulo() }}</h2>
+      <app-tamanho-pagina [paginacao]="paginacao" />
+    </header>
+    <div class="tabela-rolagem" [class.list-scroll]="paginacao.fim() - paginacao.inicio() > 10" tabindex="0" role="region" aria-label="Indicadores por equipamento">
       <table class="dados">
         <thead>
           <tr>
@@ -125,7 +127,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (l of linhas(); track l.codigo) {
+          @for (l of paginacao.recorte(linhas()); track l.codigo) {
             <tr>
               <td><span class="mancha" [style.background]="l.cor"></span>{{ l.nome }}</td>
               <td class="n">{{ inteiro(l.producao) }} <small class="apagado">{{ l.unidadeProducao }}</small></td>
@@ -143,5 +145,6 @@
         </tbody>
       </table>
     </div>
+    <app-paginador [paginacao]="paginacao" />
   </section>
 </main>

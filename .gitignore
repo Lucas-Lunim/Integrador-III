@@ -1,13 +1,48 @@
 # .NET
 bin/
 obj/
+.vs/
+TestResults/
 *.user
+*.suo
 
-# Node / Angular
+# Angular e Node.js
 node_modules/
-frontend/dist/
-frontend/.angular/
+/frontend/dist/
+/frontend/.angular/
+/frontend/coverage/
+*.tsbuildinfo
+npm-debug.log*
 
-# Configuração local com senha (gerada para cada máquina)
-*.local.sql
+# Configuração local e credenciais
 appsettings.Local.json
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.local.sql
+
+# Bancos locais e cópias do MySQL
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite3-journal
+*.backup.sql
+*.dump.sql
+
+# Arquivos temporários
+__pycache__/
+*.pyc
+*.log
+Desktop.ini
+.DS_Store
+~$*.docx

@@ -44,6 +44,18 @@ public static class Rotas
             lock (e.Trava) return Results.Ok(Mensagens.Serie(d, e, m, janela));
         });
 
+        api.MapGet("/operacional/maquinas/{codigo}/historico",
+            async (string codigo, DateTimeOffset? desde, DateTimeOffset? ate, Memoria memoria, Banco banco, CancellationToken ct) =>
+            {
+                if (!memoria.Pronta) return Inicializando();
+                var d = memoria.Dimensoes;
+                if (!d.MaquinaPorCodigo.TryGetValue(codigo, out var m)) return Results.NotFound();
+                if (desde > ate) return Results.BadRequest(new { erro = "O início deve anteceder o fim do período." });
+                await using var c = await banco.AbrirAsync(ct);
+                var dados = await BancoLeituras.LerHistoricoAsync(c, m, desde?.UtcDateTime, ate?.UtcDateTime, ct);
+                return Results.Ok(Mensagens.Historico(d, m, dados));
+            });
+
         api.MapGet("/tatico/indicadores",
             (string? granularidade, int? periodos, string? maquina, string? agrupar, Memoria memoria, Banco banco, Configuracao cfg, CancellationToken ct) =>
                 IndicadoresAsync(granularidade, periodos ?? 8, maquina,
@@ -71,11 +83,12 @@ public static class Rotas
             return Results.BadRequest(new { erro = $"Granularidade permitida neste nível: {string.Join(", ", permitidas.Select(Periodo.Texto))}." });
 
         var d = memoria.Dimensoes;
-        var maquinas = d.Maquinas();
+        var maquinas = d.MaquinasMonitoradas();
         int? filtro = null;
         if (!string.IsNullOrWhiteSpace(maquina))
         {
-            if (!d.MaquinaPorCodigo.TryGetValue(maquina, out var m)) return Results.NotFound(new { erro = $"Máquina {maquina} não cadastrada." });
+            if (!d.MaquinaPorCodigo.TryGetValue(maquina, out var m) || !maquinas.Contains(m))
+                return Results.NotFound(new { erro = $"Máquina {maquina} não está no monitoramento." });
             (maquinas, filtro) = ([m], m);
         }
 

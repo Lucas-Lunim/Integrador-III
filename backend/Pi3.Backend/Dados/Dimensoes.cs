@@ -48,6 +48,9 @@ public sealed class Dimensoes
     public int StatusDesconhecido => StatusPorCodigo.GetValueOrDefault("DESCONHECIDO");
 
     /// <summary>Ids das máquinas cadastradas, em ordem de id.</summary>
+    public int[] MaquinasMonitoradas() =>
+        [.. Maquinas().Where(m => TipoCodigo[MaquinaTipo[m]] != "ROBO_SOLDAGEM")];
+
     public int[] Maquinas()
     {
         var ids = new List<int>();

@@ -7,7 +7,8 @@ public sealed record SaudeBanco(bool Ok, string? Erro, int LotesPendentes, int L
 
 public sealed record SaudeSintese(DateTime? UltimoCiclo, bool Ok, string? Erro, string? Resumo);
 
-public sealed record SaudeDto(DateTime Agora, string ApiUrl, bool Pronto, SaudeColeta Coleta, SaudeBanco Banco, SaudeSintese Sintese);
+public sealed record SaudeDto(DateTime Agora, string ApiUrl, bool Pronto, SaudeColeta Coleta, SaudeBanco Banco,
+    SaudeSintese Sintese, double ColetaIntervaloSegundos, double RetencaoBrutoHoras);
 
 /// <summary>Últimos resultados de cada sistema, para a tela e para diagnóstico.</summary>
 public sealed class Saude
@@ -44,6 +45,7 @@ public sealed class Saude
 
     public SaudeDto Retrato(Configuracao cfg, bool pronto)
     {
-        lock (trava) return new(DateTime.UtcNow, cfg.ApiUrl, pronto, coleta, banco, sintese);
+        lock (trava) return new(DateTime.UtcNow, cfg.ApiUrl, pronto, coleta, banco, sintese,
+            cfg.ColetaIntervaloSegundos, cfg.RetencaoBrutoHoras);
     }
 }

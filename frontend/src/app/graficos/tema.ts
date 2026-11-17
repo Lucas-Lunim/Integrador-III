@@ -1,5 +1,3 @@
-import { signal } from '@angular/core';
-
 export const FONTE = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
 export interface Tema {
@@ -12,16 +10,9 @@ export interface Tema {
   series: string[];
 }
 
-const consulta = typeof matchMedia === 'undefined' ? null : matchMedia('(prefers-color-scheme: dark)');
-
-/** Muda quando o sistema alterna claro/escuro; quem monta opções de gráfico lê este sinal para se redesenhar. */
-export const modoEscuro = signal(consulta?.matches ?? false);
-consulta?.addEventListener('change', (e) => modoEscuro.set(e.matches));
-
-/** Cores atuais dos tokens CSS (styles.css): o gráfico usa exatamente a paleta validada de cada modo. */
+/** Cores do painel, compartilhadas entre os gráficos e as tabelas. */
 export function lerTema(): Tema {
-  modoEscuro();
-  const css = getComputedStyle(document.documentElement);
+  const css = getComputedStyle(document.querySelector('app-root') ?? document.documentElement);
   const v = (nome: string) => css.getPropertyValue(nome).trim();
   return {
     tinta: v('--tinta'),

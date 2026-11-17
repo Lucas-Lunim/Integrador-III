@@ -67,6 +67,8 @@ export interface Saude {
   agora: string;
   apiUrl: string;
   pronto: boolean;
+  coletaIntervaloSegundos: number;
+  retencaoBrutoHoras: number;
   coleta: {
     ultimaTentativa: string | null;
     ok: boolean;
@@ -101,6 +103,13 @@ export class Api {
     return this.http.get<Serie>(`/api/operacional/maquinas/${encodeURIComponent(maquina)}/serie`, {
       params: { minutos },
     });
+  }
+
+  historico(maquina: string, desde?: number, ate?: number) {
+    const params: Record<string, string> = {};
+    if (desde !== undefined) params['desde'] = new Date(desde).toISOString();
+    if (ate !== undefined) params['ate'] = new Date(ate).toISOString();
+    return this.http.get<Serie>(`/api/operacional/maquinas/${encodeURIComponent(maquina)}/historico`, { params });
   }
 
   tatico(granularidade: 'semana' | 'mes', periodos: number, agrupar: 'maquina' | 'planta', maquina?: string) {

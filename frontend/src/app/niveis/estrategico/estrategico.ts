@@ -1,5 +1,6 @@
 import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { Subscription, forkJoin } from 'rxjs';
+import { Paginacao, Paginador, TamanhoPaginaControle } from '../../componentes/paginacao';
 import { Api, Indicadores } from '../../dados/api';
 import { descricaoPeriodo, horas, inteiro, numero, percentual, rotuloPeriodo } from '../../dados/formatos';
 import { celula, serieDoGrupo, variacao } from '../../dados/indicadores';
@@ -10,12 +11,13 @@ type Granularidade = 'mes' | 'ano';
 
 @Component({
   selector: 'app-estrategico',
-  imports: [Grafico],
+  imports: [Grafico, TamanhoPaginaControle, Paginador],
   templateUrl: './estrategico.html',
   styleUrl: './estrategico.css',
 })
 export default class Estrategico {
   private readonly api = inject(Api);
+  private pedido?: Subscription;
 
   protected readonly granularidade = signal<Granularidade>('mes');
   protected readonly planta = signal<Indicadores | null>(null);
@@ -28,11 +30,15 @@ export default class Estrategico {
       const g = this.granularidade();
       untracked(() => {
         this.escolhido.set(null);
+        this.paginacao.reiniciar();
         this.carregar(g);
       });
     });
     const recarga = setInterval(() => this.carregar(this.granularidade()), 5 * 60_000);
-    inject(DestroyRef).onDestroy(() => clearInterval(recarga));
+    inject(DestroyRef).onDestroy(() => {
+      clearInterval(recarga);
+      this.pedido?.unsubscribe();
+    });
   }
 
   protected readonly periodo = computed(() => {
@@ -93,6 +99,8 @@ export default class Estrategico {
     });
   });
 
+  protected readonly paginacao = new Paginacao(() => this.tipos().length);
+
   // Uma medida por gráfico (produção em peças, disponibilidade e perdas em %): nunca dois eixos.
   protected readonly graficoProducao = computed(() =>
     this.grafico('producao', 'bar', (v) => inteiro(v), (v) => inteiro(v), false),
@@ -146,7 +154,8 @@ export default class Estrategico {
 
   private carregar(g: Granularidade) {
     const quantidade = g === 'mes' ? 12 : 5;
-    forkJoin([this.api.estrategico(g, quantidade, 'planta'), this.api.estrategico(g, quantidade, 'tipo')]).subscribe({
+    this.pedido?.unsubscribe();
+    this.pedido = forkJoin([this.api.estrategico(g, quantidade, 'planta'), this.api.estrategico(g, quantidade, 'tipo')]).subscribe({
       next: ([planta, porTipo]) => {
         this.planta.set(planta);
         this.porTipo.set(porTipo);

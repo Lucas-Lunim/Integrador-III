@@ -1,5 +1,6 @@
 import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { Subscription, forkJoin } from 'rxjs';
+import { Paginacao, Paginador, TamanhoPaginaControle } from '../../componentes/paginacao';
 import { Api, Indicadores } from '../../dados/api';
 import { Catalogo } from '../../dados/catalogo';
 import { descricaoPeriodo, horas, inteiro, numero, percentual, rotuloPeriodo } from '../../dados/formatos';
@@ -11,12 +12,13 @@ type Granularidade = 'semana' | 'mes';
 
 @Component({
   selector: 'app-tatico',
-  imports: [Grafico],
+  imports: [Grafico, TamanhoPaginaControle, Paginador],
   templateUrl: './tatico.html',
   styleUrl: './tatico.css',
 })
 export default class Tatico {
   private readonly api = inject(Api);
+  private pedido?: Subscription;
   protected readonly catalogo = inject(Catalogo);
 
   protected readonly granularidade = signal<Granularidade>('semana');
@@ -33,12 +35,16 @@ export default class Tatico {
       const m = this.maquina();
       untracked(() => {
         this.escolhido.set(null);
+        this.paginacao.reiniciar();
         this.carregar(g, m);
       });
     });
     // Resumos mudam devagar: recarregar a cada minuto mantém o período corrente em dia.
     const recarga = setInterval(() => this.carregar(this.granularidade(), this.maquina()), 60_000);
-    inject(DestroyRef).onDestroy(() => clearInterval(recarga));
+    inject(DestroyRef).onDestroy(() => {
+      clearInterval(recarga);
+      this.pedido?.unsubscribe();
+    });
   }
 
   protected readonly periodo = computed(() => {
@@ -101,6 +107,8 @@ export default class Tatico {
       };
     });
   });
+
+  protected readonly paginacao = new Paginacao(() => this.linhas().length);
 
   protected readonly graficoProducao = computed<OpcoesGrafico | null>(() => {
     const ind = this.porMaquina();
@@ -177,7 +185,8 @@ export default class Tatico {
 
   private carregar(g: Granularidade, maquina: string) {
     const quantidade = g === 'semana' ? 8 : 6;
-    forkJoin([
+    this.pedido?.unsubscribe();
+    this.pedido = forkJoin([
       this.api.tatico(g, quantidade, 'maquina', maquina || undefined),
       this.api.tatico(g, quantidade, 'planta', maquina || undefined),
     ]).subscribe({

@@ -1,43 +1,42 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { Api, Saude } from './dados/api';
-import { haQuanto } from './dados/formatos';
+import { DOCUMENT } from '@angular/common';
+import { Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { Relogio } from './dados/relogio';
+import { haQuanto } from './dados/formatos';
+import { SaudePainel } from './dados/saude-painel';
 
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './app.html',
-  styleUrl: './app.css',
 })
 export class App {
-  private readonly api = inject(Api);
+  private readonly documento = inject(DOCUMENT);
+  private readonly router = inject(Router);
+  private readonly saudePainel = inject(SaudePainel);
   private readonly relogio = inject(Relogio);
-  protected readonly saude = signal<Saude | null>(null);
-  protected readonly semResposta = signal(false);
+  protected readonly titulo = toSignal(
+    this.router.events.pipe(
+      filter((evento) => evento instanceof NavigationEnd),
+      map(() => this.router.routerState.snapshot.root.firstChild?.data['secao'] ?? 'Visão geral'),
+    ),
+    { initialValue: 'Visão geral' },
+  );
 
-  /** Resumo da coleta mostrado no topo de todas as telas. */
   protected readonly situacao = computed(() => {
-    const s = this.saude();
-    const agora = this.relogio.agora();
-    if (this.semResposta()) return { classe: 'erro', texto: 'Backend fora do ar' };
-    if (!s) return { classe: '', texto: 'Conectando…' };
-    if (!s.pronto) return { classe: 'erro', texto: 'Aguardando o banco de dados' };
-    if (!s.coleta.ok) return { classe: 'erro', texto: s.coleta.erro ?? 'Coleta com falha' };
-    if (!s.banco.ok) return { classe: 'alerta', texto: `Banco indisponível · ${s.banco.lotesPendentes} lotes na fila` };
-    return { classe: 'ok', texto: `Coleta ok · ${haQuanto(s.coleta.ultimaTentativa, agora)}` };
+    const s = this.saudePainel.dados();
+    if (this.saudePainel.falhou()) return { classe: 'erro', texto: 'Backend fora do ar', detalhe: '' };
+    if (!s) return { classe: '', texto: 'Conectando…', detalhe: '' };
+    if (!s.pronto) return { classe: 'erro', texto: 'Aguardando banco de dados', detalhe: '' };
+    if (!s.coleta.ok) return { classe: 'erro', texto: 'Coleta com falha', detalhe: s.coleta.erro ?? '' };
+    if (!s.banco.ok) return { classe: '', texto: 'Banco indisponível', detalhe: s.banco.erro ?? '' };
+    return { classe: 'ok', texto: `Coleta ok · ${haQuanto(s.coleta.ultimaTentativa, this.relogio.agora())}`, detalhe: '' };
   });
 
-  constructor() {
-    const atualizar = () =>
-      this.api.saude().subscribe({
-        next: (s) => {
-          this.saude.set(s);
-          this.semResposta.set(false);
-        },
-        error: () => this.semResposta.set(true),
-      });
-    atualizar();
-    setInterval(atualizar, 10_000);
+  protected irAoConteudo(evento: Event) {
+    evento.preventDefault();
+    this.documento.getElementById('conteudo')?.focus();
   }
 }

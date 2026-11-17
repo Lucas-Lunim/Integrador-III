@@ -1,4 +1,5 @@
 using Pi3.Backend.Dados;
+using Pi3.Backend.Persistencia;
 using Pi3.Backend.Transformacoes;
 
 namespace Pi3.Backend.Endpoints;
@@ -40,7 +41,7 @@ public static class Mensagens
     /// <summary>Última leitura de cada máquina. Chamar com o estado travado.</summary>
     public static AgoraDto Agora(Dimensoes d, EstadoAoVivo e)
     {
-        var maquinas = d.Maquinas();
+        var maquinas = d.MaquinasMonitoradas();
         var lista = new MaquinaAgoraDto[maquinas.Length];
         for (var j = 0; j < maquinas.Length; j++)
         {
@@ -113,6 +114,23 @@ public static class Mensagens
         return new SerieDto(d.MaquinaCodigo[m], [.. atributos.Select(a => d.AtributoCodigo[a])], [.. instantes], [.. status], series);
     }
 
+    public static SerieDto Historico(Dimensoes d, int m, IReadOnlyList<LeituraHistorica> linhas)
+    {
+        var atributos = d.AtributosDoTipo[d.MaquinaTipo[m]];
+        var instantes = new long[linhas.Count];
+        var status = new string[linhas.Count];
+        var series = atributos.ToDictionary(a => d.AtributoCodigo[a], _ => new double?[linhas.Count]);
+        for (var i = 0; i < linhas.Count; i++)
+        {
+            var linha = linhas[i];
+            instantes[i] = linha.Instante;
+            status[i] = linha.Status < d.StatusCodigo.Length ? d.StatusCodigo[linha.Status] : "DESCONHECIDO";
+            foreach (var (a, valor) in linha.Valores)
+                if (a < d.AtributoCodigo.Length && series.TryGetValue(d.AtributoCodigo[a], out var coluna)) coluna[i] = valor;
+        }
+        return new SerieDto(d.MaquinaCodigo[m], [.. series.Keys], instantes, status, series);
+    }
+
     public static DimensoesDto Dimensoes(Dimensoes d)
     {
         var tipos = new List<TipoDto>();
@@ -131,7 +149,7 @@ public static class Mensagens
             if (d.StatusCodigo[s].Length > 0)
                 status.Add(new StatusDto(d.StatusCodigo[s], d.StatusNome[s], Texto(d.StatusCategoria[s]), d.StatusAlerta[s]));
 
-        var maquinas = d.Maquinas()
+        var maquinas = d.MaquinasMonitoradas()
             .Select(m => new MaquinaDto(d.MaquinaCodigo[m], d.TipoCodigo[d.MaquinaTipo[m]], d.SetorNome[d.MaquinaSetor[m]]))
             .ToArray();
         return new DimensoesDto(maquinas, [.. tipos], [.. atributos], [.. status]);

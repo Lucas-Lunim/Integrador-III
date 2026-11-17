@@ -1,33 +1,30 @@
 # Projeto Integrador III — Sistema Integrado de Dados Industriais
 
-Apresentação no Canva: https://canva.link/iy6zuny0z4os2a7
+O sistema coleta as leituras das máquinas da API industrial, grava os dados no MySQL e apresenta as informações em três níveis:
 
-O sistema coleta em tempo real as leituras das máquinas da API industrial, grava no MySQL, sintetiza os dados com o passar do tempo e mostra três níveis de visão:
-
-- **Operacional:** status e valores ao vivo de cada máquina.
+- **Operacional:** condições, alertas e leituras das máquinas.
 - **Tático:** produção, perdas e disponibilidade por semana e por mês.
-- **Estratégico:** tendências de meses e anos da planta.
+- **Estratégico:** tendências da planta por mês e por ano.
 
 | Pasta | Conteúdo |
-|---|---|
-| `backend/Pi3.Backend` | C# / .NET 10: coletor, sintetizador e API (Data Oriented Design) |
-| `backend/Pi3.Simulador` | Simulador da API industrial, só para testes |
-| `frontend/` | Angular 22 + TypeScript: uma área por nível |
-| `database/` | Scripts do MySQL: banco, schema e limpeza |
-| `docs/` | Documentação |
-| `explore/` | Análise exploratória da API (`exploracao.html` + proxy `servidor.py`) |
-| `PROJETO-INTEGRADOR-III.html` | Enunciado do projeto |
+| --- | --- |
+| `backend/Pi3.Backend/` | Coleta, armazenamento e API em .NET 10 |
+| `frontend/` | Painel em Angular |
+| `backend/Pi3.Simulador/` | Simulador da API industrial para testes |
+| `database/` | Script de preparação do MySQL |
+| `Documentação/` | Relatório e comandos de inicialização |
 
-## Documentação
+## Inicialização
 
-- [Como rodar](docs/como-rodar.md)
-- [Arquitetura e DOD](docs/arquitetura.md)
-- [Modelo de dados (DER atualizado)](docs/modelo-de-dados.md)
-- [Tratativas de dados](docs/tratativas-de-dados.md): cada tratamento aplicado às leituras e a definição dos indicadores
+Siga o [guia de inicialização](Documentação/COMO-INICIAR.md) para configurar o MySQL, atualizar o endereço da API industrial e abrir o painel em [localhost:5080](http://localhost:5080).
 
-## Início rápido
+## Entrega parcial
 
-```bash
-mysql -u root -p < database/01_criar_banco_e_usuario.local.sql   # uma vez
-./rodar.sh 10.12.22.92                                             # IP atual da API → http://localhost:5080
-```
+- [Relatório da entrega parcial](Documentação/Projeto_Integrador_III_Entrega_Parcial.docx)
+- [Apresentação da equipe no Canva](https://canva.link/iy6zuny0z4os2a7)
+
+## Referências técnicas
+
+- [Arquitetura](docs/arquitetura.md)
+- [Modelo de dados](docs/modelo-de-dados.md)
+- [Tratamento das leituras](docs/tratativas-de-dados.md)

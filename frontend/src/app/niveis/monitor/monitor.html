@@ -1,0 +1,359 @@
+<main>
+  <header class="page-header">
+    @switch (tela) {
+      @case ('geral') {
+        <div><h1>Visão geral</h1><p>Condição e leituras dos equipamentos</p></div>
+      }
+      @case ('alertas') {
+        <div><h1>Alertas do recorte</h1><p>Desvios e interrupções de coleta no período</p></div>
+      }
+      @case ('maquina') {
+        <div><h1>{{ nome(codigo()) }}</h1><p>{{ codigo() }}</p></div>
+      }
+    }
+    @if (!janelaDaOcorrencia()) {
+      <label>Período analisado
+        <select #seletor (change)="trocarPeriodo(seletor.value)">
+          @for (opcao of periodos; track opcao.id) {
+            <option [value]="opcao.id" [selected]="periodo().id === opcao.id">
+              {{ opcao.nome }}{{ opcao.id === 'live' ? ' · ' + numero(intervalo()) + ' s' : '' }}
+            </option>
+          }
+        </select>
+      </label>
+    }
+  </header>
+
+  @if (tela === 'maquina') {
+    @if (janelaDaOcorrencia()) {
+      <a class="back" routerLink="/alertas" [queryParams]="{maquina: codigo(), lista: consultaOrigem()}">← Voltar aos alertas</a>
+    } @else {
+      <a class="back" routerLink="/operacional">← Todas as máquinas</a>
+    }
+  }
+
+  @if (janelaDaOcorrencia(); as intervalo) {
+    <div class="recorte occurrence-context">
+      <strong>Ocorrência · {{ dataHora.format(intervalo[0]) }} @if (intervalo[1] !== intervalo[0]) { a {{ dataHora.format(intervalo[1]) }} }</strong>
+      <span>Janela da ocorrência com até 30 s de contexto de cada lado</span>
+    </div>
+  } @else {
+    <div class="recorte">
+      <strong>{{ periodo().id === 'live' ? 'Janela de 30 s · coleta a cada ' + numero(intervalo()) + ' s' : periodo().nome }}</strong>
+      @if (ultimaDoRecorte(); as ultima) { <span>Última leitura do período · {{ dataHora.format(ultima) }} (Brasília)</span> }
+    </div>
+    @if (periodo().id === 'all' && retencao(); as h) {
+      <p class="aviso">Desde o início das leituras brutas disponíveis. A janela configurada no banco é de {{ numero(h / 24, 1) }} dias. Consulte os resumos de datas anteriores nas telas Tático e Estratégico.</p>
+    }
+  }
+
+  @if (erro()) {
+    <div class="recorte occurrence-context" role="status">
+      <span>Parte das leituras ficou indisponível.</span>
+      <button type="button" class="status-action" (click)="recarregar()">Tentar novamente</button>
+    </div>
+  }
+  @if (!pronto() || carregando()) { <p class="loading" role="status">Consultando leituras…</p> }
+
+  @switch (tela) {
+    @case ('geral') {
+      @let dados = cartoes();
+      @if (pronto()) {
+        <dl class="kpis">
+          <div class="kpi"><dt>Máquinas com leituras</dt><dd>{{ dados.comLeituras.length }} <span>/ {{ maquinas().length }}</span></dd><p>No período selecionado</p></div>
+          <div class="kpi"><dt>Em condição normal</dt><dd>{{ dados.normal }}</dd><p>Pela última leitura</p></div>
+          <div class="kpi warn" [class.kpi-action]="dados.atencao">
+            <dt>Em atenção</dt>
+            <dd>@if (dados.atencao) {<a routerLink="/alertas" [queryParams]="{condicao: 'Atenção'}" aria-label="Ver alertas em atenção">{{ dados.atencao }} <span aria-hidden="true">↗</span></a>} @else { 0 }</dd>
+            <p>Pela última leitura</p>
+          </div>
+          <div class="kpi bad" [class.kpi-action]="dados.critica">
+            <dt>Em condição crítica</dt>
+            <dd>@if (dados.critica) {<a routerLink="/alertas" [queryParams]="{condicao: 'Crítica'}" aria-label="Ver alertas críticos">{{ dados.critica }} <span aria-hidden="true">↗</span></a>} @else { 0 }</dd>
+            <p>Pela última leitura</p>
+          </div>
+        </dl>
+        <div class="section-heading">
+          <h2>Equipamentos</h2>
+          @if (dados.comLeituras.length) {<p>Escala comum de temperatura · faixas cinza indicam lacunas encurtadas</p>}
+          <a routerLink="/alertas">Ver alertas ↗</a>
+        </div>
+        @if (dados.comLeituras.length) {
+          <ng-container [ngTemplateOutlet]="grade" [ngTemplateOutletContext]="{ $implicit: dados.comLeituras, titulo: 'Máquinas com leituras' }" />
+        }
+        @if (dados.semLeituras.length) {
+          @if (dados.comLeituras.length) { <h3 class="quiet-heading">Sem leituras neste recorte</h3> }
+          <ng-container [ngTemplateOutlet]="grade" [ngTemplateOutletContext]="{ $implicit: dados.semLeituras, titulo: 'Máquinas sem leituras' }" />
+        }
+        @if (!maquinas().length) { <p class="panel empty">Nenhuma máquina cadastrada.</p> }
+      }
+    }
+
+    @case ('maquina') {
+      @if (pronto() && !catalogado()) {
+        <p class="panel empty">Máquina indisponível no monitoramento.</p>
+      } @else if (catalogado()) {
+        <nav class="tabs" aria-label="Detalhes da máquina">
+          @for (aba of abas; track aba) {
+            <button type="button" [attr.aria-pressed]="detalhe() === aba" (click)="trocarDetalhe(aba)">{{ aba }}</button>
+          }
+        </nav>
+
+        @switch (detalhe()) {
+          @case ('Histórico') {
+            <section class="panel">
+              <header class="panel-head list-head">
+                <h2>Leituras do período</h2>
+                <app-tamanho-pagina [paginacao]="paginaHistorico" />
+              </header>
+              @if (linhas().length) {
+                <div class="table-scroll" [class.list-scroll]="paginaHistorico.fim() - paginaHistorico.inicio() > 10"
+                  tabindex="0" role="region" aria-label="Leituras do período">
+                  <table>
+                    <thead><tr>
+                      <th scope="col">Horário</th><th scope="col">Condição</th>
+                      @for (atributo of atributos(); track atributo) { <th scope="col">{{ rotulo(atributo) }}</th> }
+                    </tr></thead>
+                    <tbody>
+                      @for (linha of paginaHistorico.recorte(historico()); track linha.t) {
+                        @let estado = situacao(linha);
+                        <tr>
+                          <td>{{ dataHora.format(linha.t) }}</td>
+                          <td><span class="badge" [attr.data-state]="estado" [title]="catalogo.nomeStatus(linha.status)">{{ estado }}</span></td>
+                          @for (atributo of atributos(); track atributo) { <td>{{ numero(linha.valores[atributo]) }}</td> }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                <app-paginador [paginacao]="paginaHistorico" rotulo="Páginas do histórico" />
+              } @else if (!carregando()) {
+                <p class="empty">Nenhuma leitura neste período.</p>
+              }
+            </section>
+          }
+          @case ('Indicadores') {
+            <section class="panel">
+              <header class="panel-head list-head">
+                <h2>Resumo das medições</h2>
+                <app-tamanho-pagina [paginacao]="paginaIndicadores" />
+              </header>
+              @if (atributos().length) {
+                <div class="table-scroll" [class.list-scroll]="paginaIndicadores.fim() - paginaIndicadores.inicio() > 10"
+                  tabindex="0" role="region" aria-label="Resumo das medições">
+                  <table>
+                    <thead><tr>
+                      <th scope="col">Indicador</th><th scope="col">Último</th><th scope="col">Mínimo</th>
+                      <th scope="col">Média</th><th scope="col">Máximo</th>
+                    </tr></thead>
+                    <tbody>
+                      @for (atributo of paginaIndicadores.recorte(atributos()); track atributo) {
+                        <tr><td>{{ rotulo(atributo) }}</td>
+                          @for (valor of resumir(atributo); track $index) { <td>{{ numero(valor) }}</td> }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                <app-paginador [paginacao]="paginaIndicadores" rotulo="Páginas dos indicadores" />
+              } @else if (!carregando()) {
+                <p class="empty">Nenhuma medição neste período.</p>
+              }
+            </section>
+          }
+          @default {
+            @if (atributoAtual(); as selecao) {
+              <div class="detail-layout">
+                <section class="panel">
+                  <div class="panel-head">
+                    <div><h2>Evolução · {{ rotulo(selecao) }}</h2><p>{{ amostras().length }} medições no período</p></div>
+                    @if (atributos().length > 1) {
+                      <label>Indicador
+                        <select #metrica (change)="atributo.set(metrica.value)">
+                          @for (codigo of atributos(); track codigo) {
+                            <option [value]="codigo" [selected]="codigo === selecao">{{ rotulo(codigo) }}</option>
+                          }
+                        </select>
+                      </label>
+                    }
+                  </div>
+                  <div class="large-chart">
+                    <app-curva [dados]="amostras()" [escala]="escala()" [rotulo]="rotulo(selecao)" [unidade]="unidade(selecao)"
+                      [tolerancia]="tolerancia()" [grande]="true" [ocorrencia]="janelaDaOcorrencia()" />
+                  </div>
+                  <p class="chart-foot" id="chart-guide">Use o mouse, o toque ou as setas para ver as medições. As faixas cinza encurtam os intervalos sem dados.</p>
+                </section>
+                @if (ultimaDaMaquina(); as ultima) {
+                  @let estado = situacao(ultima);
+                  <aside class="panel">
+                    <div class="panel-head">
+                      <div><h2>Última leitura</h2><p>{{ dataHora.format(ultima.t) }}</p></div>
+                      <span class="badge" [attr.data-state]="estado" [title]="catalogo.nomeStatus(ultima.status)">{{ estado }}</span>
+                    </div>
+                    <ul class="conditions">
+                      @for (atributo of atributos(); track atributo) {
+                        @if (ultima.valores[atributo] != null) {
+                          <li><span>{{ rotulo(atributo) }}</span><strong>{{ numero(ultima.valores[atributo]) }}</strong></li>
+                        }
+                      }
+                    </ul>
+                  </aside>
+                }
+              </div>
+            } @else if (!carregando()) {
+              <p class="panel empty">Nenhuma medição neste período.</p>
+            }
+          }
+        }
+      }
+    }
+
+    @case ('alertas') {
+      @let resumo = eventos();
+      @if (pronto()) {
+        <dl class="kpis">
+          <div class="kpi"><dt>Sequências de desvio</dt><dd>{{ resumo.desvios.length }}</dd><p>Por máquina e condição</p></div>
+          <div class="kpi bad"><dt>Sequências críticas</dt><dd>{{ resumo.criticos }}</dd><p>Prioridade no recorte</p></div>
+          <div class="kpi warn"><dt>Máquinas com desvio</dt><dd>{{ resumo.porMaquina.length }} <span>/ {{ maquinas().length }}</span></dd><p>No período selecionado</p></div>
+          <div class="kpi"><dt>Lacunas de coleta</dt><dd>{{ resumo.lacunas.length }}</dd><p>Intervalos entre leituras</p></div>
+        </dl>
+        <nav class="tabs" aria-label="Ocorrências no período">
+          <button type="button" [attr.aria-pressed]="lista() === 'desvios'" (click)="trocarLista('desvios')">Desvios</button>
+          <button type="button" [attr.aria-pressed]="lista() === 'lacunas'" (click)="trocarLista('lacunas')">Lacunas de coleta</button>
+        </nav>
+        <div class="alert-layout">
+          <section class="panel">
+            <header class="panel-head">
+              <h2>{{ lista() === 'desvios' ? 'Sequências de desvio' : 'Lacunas de coleta' }}</h2>
+              <div class="toolbar">
+                <label>Máquina
+                  <select #filtro (change)="filtroMaquina.set(filtro.value); paginaAlertas.reiniciar()">
+                    <option value="" [selected]="filtroMaquina() === ''">Todas</option>
+                    @for (m of maquinas(); track m.codigo) {
+                      <option [value]="m.codigo" [selected]="filtroMaquina() === m.codigo">{{ catalogo.nomeMaquina(m.codigo) }}</option>
+                    }
+                  </select>
+                </label>
+                @if (lista() === 'desvios') {
+                  <label>Condição
+                    <select #estado (change)="gravidade.set(estado.value); paginaAlertas.reiniciar()">
+                      @for (opcao of ['', 'Crítica', 'Atenção']; track opcao) {
+                        <option [value]="opcao" [selected]="gravidade() === opcao">{{ opcao || 'Todas' }}</option>
+                      }
+                    </select>
+                  </label>
+                  <label>Ordem
+                    <select #ordenar (change)="ordem.set(ordenar.value); paginaAlertas.reiniciar()">
+                      <option value="gravidade" [selected]="ordem() === 'gravidade'">Maior gravidade</option>
+                      <option value="recente" [selected]="ordem() === 'recente'">Mais recentes</option>
+                    </select>
+                  </label>
+                }
+                <app-tamanho-pagina [paginacao]="paginaAlertas" />
+              </div>
+            </header>
+            @if (paginaAlertas.total()) {
+              <div [class.list-scroll]="paginaAlertas.fim() - paginaAlertas.inicio() > 10"
+                tabindex="0" role="region" aria-label="Ocorrências desta página">
+                <div class="alert-columns" aria-hidden="true">
+                  <span>Máquina</span><span>{{ lista() === 'desvios' ? 'Última temperatura' : 'Última leitura' }}</span>
+                  <span>{{ lista() === 'desvios' ? 'Horário no recorte' : 'Retorno da coleta' }}</span><span></span>
+                </div>
+                <ul class="alert-list">
+                  @if (lista() === 'desvios') {
+                    @for (item of paginaAlertas.recorte(desvios()); track item.codigo + item.inicio.t) {
+                      <li class="alert-record">
+                        <div class="alert-ident"><strong>{{ item.nome }}</strong>
+                          <span class="badge" [attr.data-state]="item.condicao">{{ item.condicao }}</span>
+                          <span class="outcome" [class.ongoing]="item.resultado === 'Em curso'" [class.resolved]="item.resultado === 'Normalizou'"> {{ item.resultado }}</span>
+                        </div>
+                        <div class="alert-reading">
+                          @if (item.fim.valores['temperatura'] != null) { <strong>{{ numero(item.fim.valores['temperatura']) }} °C</strong> }
+                          @else { <span>Sem temperatura</span> }
+                        </div>
+                        <div class="alert-time">
+                          {{ dataHora.format(item.inicio.t) }}
+                          @if (item.inicio.t !== item.fim.t) { a {{ horario.format(item.fim.t) }} }
+                          <small>{{ item.quantidade }} {{ item.quantidade === 1 ? 'leitura' : 'leituras' }}</small>
+                        </div>
+                        <a class="inline-link alert-action" [routerLink]="['/operacional', item.codigo]"
+                          [queryParams]="{de: item.inicio.t, ate: item.fim.t}">Ver ocorrência ↗</a>
+                      </li>
+                    }
+                  } @else {
+                    @for (item of paginaAlertas.recorte(lacunas()); track item.codigo + item.anterior) {
+                      <li class="alert-record">
+                        <div class="alert-ident"><strong>{{ item.nome }}</strong><span class="outcome">{{ item.retorno ? 'Coleta retomada' : 'Sem retorno no recorte' }}</span></div>
+                        <div class="alert-reading">{{ dataHora.format(item.anterior) }}</div>
+                        <div class="alert-time">
+                          @if (item.retorno) { {{ dataHora.format(item.retorno) }} }
+                          @else { Aguardando leitura }
+                          <small>{{ horas(((item.retorno ?? agora()) - item.anterior) / 3600000) }} sem coleta</small>
+                        </div>
+                        <a class="inline-link alert-action" [routerLink]="['/operacional', item.codigo]"
+                          [queryParams]="{de: item.anterior, ate: item.retorno ?? item.anterior, origem: 'lacunas'}">Ver ocorrência ↗</a>
+                      </li>
+                    }
+                  }
+                </ul>
+              </div>
+              <app-paginador [paginacao]="paginaAlertas" rotulo="Páginas das ocorrências" />
+            } @else if (!carregando()) {
+              <p class="empty">Nenhuma ocorrência neste filtro.</p>
+            }
+          </section>
+          @if (lista() === 'desvios' && resumo.porMaquina.length) {
+            <aside class="panel">
+              <div class="panel-head"><div><h2>Desvios por máquina</h2><p>Sequências no período</p></div></div>
+              <div class="bars">
+                @for (item of resumo.porMaquina; track item.codigo) {
+                  <div class="bar-row">
+                    <div><span>{{ item.nome }}</span><strong>{{ item.alertas.length }}</strong></div>
+                    <div class="bar-track" aria-hidden="true"><span class="bar-fill" [style.width.%]="100 * item.alertas.length / resumo.porMaquina[0].alertas.length"></span></div>
+                  </div>
+                }
+              </div>
+            </aside>
+          }
+        </div>
+        <p class="footnote">Desvios são agrupados por máquina e condição. Intervalos superiores a {{ numero(tolerancia() / 1000) }} s indicam lacunas.</p>
+      }
+    }
+  }
+</main>
+
+<ng-template #grade let-cartoes let-titulo="titulo">
+  <section class="machine-grid" [attr.aria-label]="titulo">
+    @for (m of cartoes; track m.codigo) {
+      <a class="machine" [attr.data-state]="m.situacao" [style.--span-desktop]="m.desktop" [style.--span-tablet]="m.tablet"
+        [routerLink]="['/operacional', m.codigo]">
+        <div class="machine-heading">
+          <div><h3>{{ m.nome }}</h3><small>{{ m.codigo }}</small></div>
+          <span class="badge" [attr.data-state]="m.situacao">{{ m.situacao }}</span>
+        </div>
+        @if (m.temperaturas.length) {
+          <div class="chart-box">
+            <div class="chart-title"><span>Temperatura (°C)</span><strong>{{ numero(m.temperaturas.at(-1)?.valor) }} <small>°C</small></strong></div>
+            <app-curva [dados]="m.temperaturas" [escala]="cartoesGeralEscala()" [tolerancia]="tolerancia()" rotulo="Temperatura das leituras no período" />
+          </div>
+        }
+        @if (m.resumo.length) {
+          <dl>
+            @for (campo of m.resumo; track campo.codigo) {
+              <div><dt>{{ catalogo.nomeAtributo(campo.codigo) }}</dt><dd>{{ numero(campo.valor) }} <small>{{ unidade(campo.codigo) }}</small></dd></div>
+            }
+          </dl>
+        }
+        <div class="machine-footer">
+          <span>
+            @if (m.ultima) { Última leitura · {{ horario.format(m.ultima.t) }} }
+            @else if (m.pendente) { Consultando leituras… }
+            @else if (m.falhou) { Leituras indisponíveis }
+            @else { Aguardando leitura no período }
+          </span>
+          <strong>Detalhes ↗</strong>
+        </div>
+      </a>
+    }
+  </section>
+</ng-template>

@@ -1,0 +1,140 @@
+<main class="pagina">
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="nivel-tag">Nível estratégico</span>
+      <h1>Visão da planta ao longo do tempo</h1>
+      <p>
+        Indicadores consolidados de todas as máquinas do Setor1 por {{ granularidade() === 'mes' ? 'mês' : 'ano' }}.
+        O histórico cresce à medida que o sistema coleta: não há dados anteriores ao início da coleta.
+      </p>
+    </div>
+  </div>
+
+  <section class="filtros" aria-label="Filtros">
+    <div class="campo">
+      <span>Período</span>
+      <div class="segmentado" role="group" aria-label="Granularidade">
+        <button type="button" [class.ativo]="granularidade() === 'mes'" (click)="granularidade.set('mes')">Mensal</button>
+        <button type="button" [class.ativo]="granularidade() === 'ano'" (click)="granularidade.set('ano')">Anual</button>
+      </div>
+    </div>
+    <div class="campo periodos">
+      <span>Ver</span>
+      <select #periodoControle aria-label="Período" (change)="escolhido.set(+periodoControle.value); paginacao.reiniciar()">
+        @for (r of rotulos(); track $index) {
+          <option [value]="$index" [selected]="periodo() === $index">{{ r }}</option>
+        }
+      </select>
+    </div>
+  </section>
+
+  @if (erro(); as e) {
+    <div class="aviso erro">{{ e }}</div>
+  }
+
+  <h2 class="subtitulo">{{ titulo() }}</h2>
+  <section class="indicadores" aria-label="Indicadores da planta">
+    <div class="indicador destaque">
+      <div class="rotulo">Produção da planta</div>
+      <div class="valor">{{ inteiro(resumo().producao) }}</div>
+      <div class="detalhe">
+        peças boas
+        @if (resumo().producaoVariacao != null) {
+          · {{ resumo().producaoVariacao! >= 0 ? '+' : '' }}{{ percentual(resumo().producaoVariacao) }} vs. anterior
+        }
+      </div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Disponibilidade</div>
+      <div class="valor">{{ percentual(resumo().disponibilidade) }}</div>
+      <div class="detalhe">tempo em operação</div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Taxa de perdas</div>
+      <div class="valor">{{ percentual(resumo().taxaPerdas, 2) }}</div>
+      <div class="detalhe">defeitos e rejeitos</div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Horas sem operar</div>
+      <div class="valor">{{ horas(resumo().horasSemOperar) }}</div>
+      <div class="detalhe">manutenção + paradas</div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Falhas novas</div>
+      <div class="valor">{{ inteiro(resumo().falhas) }}</div>
+      <div class="detalhe">aumento do contador de falhas</div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Cobertura dos dados</div>
+      <div class="valor">{{ percentual(resumo().cobertura) }}</div>
+      <div class="detalhe">{{ horas(resumo().horasObservadas) }} observadas</div>
+    </div>
+  </section>
+
+  @if (graficoProducao(); as opcoes) {
+    <section class="cartao">
+      <h2>Produção da planta</h2>
+      <p class="descricao">Soma das peças boas de todas as máquinas, por período.</p>
+      <app-grafico [opcoes]="opcoes" [altura]="260" descricao="Produção da planta por período" />
+    </section>
+  }
+
+  @if (graficoDisponibilidade() || graficoPerdas()) {
+    <div class="grade-2 abaixo">
+      @if (graficoDisponibilidade(); as opcoes) {
+        <section class="cartao">
+          <h2>Disponibilidade</h2>
+          <p class="descricao">Fração do tempo com status conhecido em que as máquinas operaram.</p>
+          <app-grafico [opcoes]="opcoes" [altura]="220" descricao="Disponibilidade da planta por período" />
+        </section>
+      }
+      @if (graficoPerdas(); as opcoes) {
+        <section class="cartao">
+          <h2>Taxa de perdas</h2>
+          <p class="descricao">Defeitos e rejeitos ÷ peças processadas.</p>
+          <app-grafico [opcoes]="opcoes" [altura]="220" descricao="Taxa de perdas da planta por período" />
+        </section>
+      }
+    </div>
+  } @else if (!graficoProducao() && planta()) {
+    <p class="panel empty">Nenhum dado disponível para os gráficos deste recorte.</p>
+  }
+
+  <section class="cartao abaixo">
+    <header class="grid-table-title">
+      <h2>Por tipo de máquina · {{ titulo() }}</h2>
+      <app-tamanho-pagina [paginacao]="paginacao" />
+    </header>
+    <div class="tabela-rolagem" [class.list-scroll]="paginacao.fim() - paginacao.inicio() > 10" tabindex="0" role="region" aria-label="Indicadores por equipamento">
+      <table class="dados">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th class="n">Produção</th>
+            <th class="n">Taxa de perdas</th>
+            <th class="n">Disponibilidade</th>
+            <th class="n">Sem operar</th>
+            <th class="n">Observado</th>
+            <th class="n">Temp. média</th>
+            <th class="n">Falhas novas</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of paginacao.recorte(tipos()); track t.codigo) {
+            <tr>
+              <td>{{ t.nome }}</td>
+              <td class="n">{{ inteiro(t.producao) }} <small class="apagado">{{ t.unidadeProducao }}</small></td>
+              <td class="n">{{ percentual(t.taxaPerdas, 2) }}</td>
+              <td class="n">{{ percentual(t.disponibilidade) }}</td>
+              <td class="n">{{ horas(t.horasSemOperar) }}</td>
+              <td class="n">{{ horas(t.horasObservadas) }}</td>
+              <td class="n">{{ numero(t.temperaturaMedia, 1) }}</td>
+              <td class="n">{{ inteiro(t.falhas) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-paginador [paginacao]="paginacao" />
+  </section>
+</main>

@@ -4,7 +4,7 @@ namespace Pi3.Backend;
 public sealed record Configuracao
 {
     /// <summary>Endereço base da API industrial. O IP muda com frequência: ajuste no appsettings.</summary>
-    public string ApiUrl { get; init; } = "http://10.12.22.92:8080";
+    public string ApiUrl { get; init; } = "http://10.82.175.92:8080";
 
     /// <summary>Intervalo entre consultas à API. Ela apaga as leituras após ~60 s.</summary>
     public double ColetaIntervaloSegundos { get; init; } = 5;

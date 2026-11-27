@@ -2,6 +2,8 @@
 
 Passo a passo para rodar o sistema no notebook (Fedora) da apresentação.
 
+Para só abrir o painel, sem os detalhes, use o [guia rápido](guia-abrir-o-app.md).
+
 ## O que precisa estar instalado
 
 | Ferramenta | Versão | Como conferir |
@@ -28,7 +30,7 @@ Isso cria o banco `pi3` e o usuário `pi3_app`. As tabelas são criadas pelo bac
 O IP da API industrial muda com frequência. Ajuste em `backend/Pi3.Backend/appsettings.json`:
 
 ```json
-"Pi3": { "ApiUrl": "http://10.12.22.92:8080" }
+"Pi3": { "ApiUrl": "http://10.82.175.92:8080" }
 ```
 
 Ou, só para uma execução: `Pi3__ApiUrl=http://NOVO_IP:8080 dotnet run --project Pi3.Backend`.
@@ -47,7 +49,7 @@ Para o uso real, use o script na raiz do repositório:
 
 ```bash
 ./rodar.sh                 # usa o ApiUrl do appsettings.json
-./rodar.sh 10.12.22.92     # ou informe o IP atual da API
+./rodar.sh 10.82.175.92    # ou informe o IP atual da API
 ```
 
 O script:
@@ -63,6 +65,8 @@ dotnet run --project Pi3.Backend
 ```
 
 Abra **http://localhost:5080**. O backend coleta a API, grava no banco, gera os resumos e serve as telas, tudo no mesmo processo. Para conferir a situação: http://localhost:5080/api/saude.
+
+O painel pede login. As contas de demonstração (`operador`, `tatico` e `estrategico`) estão em [usuarios.md](usuarios.md).
 
 ### Modo demonstração
 

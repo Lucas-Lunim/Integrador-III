@@ -4,14 +4,29 @@
       <span class="marca-sigla">PI III</span>
       <span class="marca-nome">Painel Industrial <small>Setor1</small></span>
     </a>
+    <!-- Só os níveis que o perfil pode ver; sem login, menu vazio -->
     <nav aria-label="Níveis">
-      <a routerLink="/operacional" routerLinkActive="ativo">Operacional</a>
-      <a routerLink="/tatico" routerLinkActive="ativo">Tático</a>
-      <a routerLink="/estrategico" routerLinkActive="ativo">Estratégico</a>
+      @if (sessao.pode('operacional')) {
+        <a routerLink="/operacional" routerLinkActive="ativo">Operacional</a>
+      }
+      @if (sessao.pode('tatico')) {
+        <a routerLink="/tatico" routerLinkActive="ativo">Tático</a>
+      }
+      @if (sessao.pode('estrategico')) {
+        <a routerLink="/estrategico" routerLinkActive="ativo">Estratégico</a>
+      }
     </nav>
     <span class="situacao" [class]="situacao().classe" [title]="saude()?.apiUrl ?? ''">
       <span class="ponto" aria-hidden="true"></span>{{ situacao().texto }}
     </span>
+    @if (sessao.usuario(); as u) {
+      <div class="usuario">
+        <span class="usuario-nome">
+          {{ u.nome }} <small>Perfil {{ nomePerfil[u.perfil] }}</small>
+        </span>
+        <button type="button" class="sair" (click)="sair()">Sair</button>
+      </div>
+    }
   </div>
 </header>
 

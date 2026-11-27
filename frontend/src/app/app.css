@@ -25,6 +25,15 @@ nav a.ativo { background: rgba(255, 255, 255, 0.14); color: #fff; box-shadow: in
 .situacao.ok .ponto { background: var(--ok); }
 .situacao.alerta .ponto { background: var(--atencao); }
 .situacao.erro .ponto { background: var(--critico); }
+.usuario { display: flex; align-items: center; gap: 10px; }
+.usuario-nome { font-weight: 600; font-size: 0.85rem; line-height: 1.15; text-align: right; }
+.usuario-nome small { display: block; font-weight: 400; font-size: 0.72rem; color: #c7d3e2; }
+.sair {
+  padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent; color: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer;
+}
+.sair:hover { background: rgba(255, 255, 255, 0.1); }
+.sair:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
 @media (max-width: 640px) {
   nav { order: 3; flex-basis: 100%; overflow-x: auto; }
   .situacao { max-width: 100%; }

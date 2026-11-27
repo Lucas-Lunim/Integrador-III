@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NOME_DO_PERFIL, Sessao } from './acesso/sessao';
 import { Api, Saude } from './dados/api';
 import { haQuanto } from './dados/formatos';
 import { Relogio } from './dados/relogio';
@@ -13,6 +14,9 @@ import { Relogio } from './dados/relogio';
 export class App {
   private readonly api = inject(Api);
   private readonly relogio = inject(Relogio);
+  private readonly router = inject(Router);
+  protected readonly sessao = inject(Sessao);
+  protected readonly nomePerfil = NOME_DO_PERFIL;
   protected readonly saude = signal<Saude | null>(null);
   protected readonly semResposta = signal(false);
 
@@ -39,5 +43,10 @@ export class App {
       });
     atualizar();
     setInterval(atualizar, 10_000);
+  }
+
+  protected sair() {
+    this.sessao.sair();
+    this.router.navigateByUrl('/login');
   }
 }

@@ -2,7 +2,7 @@
 # Sobe o sistema para uso real, coletando da API industrial.
 #
 #   ./rodar.sh                  usa o ApiUrl do backend/Pi3.Backend/appsettings.json
-#   ./rodar.sh 10.12.22.92      usa este IP (porta 8080)
+#   ./rodar.sh 10.82.175.92     usa este IP (porta 8080)
 #   ./rodar.sh http://IP:PORTA  usa este endereço
 #
 # Compila as telas se houver mudança no frontend e abre o backend em

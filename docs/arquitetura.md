@@ -89,8 +89,11 @@ Cada nível só aceita as granularidades que lhe cabem. O tático recusa `ano`; 
 
 As três áreas ficam separadas por nível e são carregadas sob demanda (lazy loading). O código do estratégico só é baixado por quem abre o estratégico.
 
+Para abrir o painel é preciso entrar com um perfil, e cada perfil vê só os seus níveis: o operador vê o operacional; o tático, o operacional e o tático; o estratégico, todos. É um protótipo só no frontend, sem verificação no backend. As contas e as limitações estão em [usuarios.md](usuarios.md).
+
 | Área | Rota | Público | Conteúdo |
 |---|---|---|---|
+| Login | `/login` | Todos | Usuário e senha; o perfil define os níveis liberados |
 | Operacional | `/operacional` | Quem acompanha a máquina | Cartão por máquina: status, valores ao vivo, idade da leitura |
 | Operacional | `/operacional/:maquina` | Quem acompanha a máquina | Faixa de status e um gráfico por atributo (15, 30 ou 60 min) |
 | Tático | `/tatico` | Supervisão e gerência | Semanal ou mensal: produção, perdas, disponibilidade, desgaste por máquina |
@@ -106,7 +109,7 @@ Gráficos:
 
 | Chave | Padrão | Para quê |
 |---|---|---|
-| `ApiUrl` | `http://10.12.22.92:8080` | Endereço da API industrial. O IP muda: ajuste aqui |
+| `ApiUrl` | `http://10.82.175.92:8080` | Endereço da API industrial. O IP muda: ajuste aqui |
 | `ColetaIntervaloSegundos` | 5 | Intervalo entre consultas à API |
 | `LimiteLacunaSegundos` | 60 | Continuidade entre leituras (T05) |
 | `SinteseIntervaloSegundos` | 60 | Ciclo do sintetizador |

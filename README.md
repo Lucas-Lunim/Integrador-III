@@ -20,14 +20,16 @@ O sistema coleta em tempo real as leituras das máquinas da API industrial, grav
 
 ## Documentação
 
+- [Guia rápido: como abrir o painel](docs/guia-abrir-o-app.md): passo a passo para o dia da apresentação
 - [Como rodar](docs/como-rodar.md)
 - [Arquitetura e DOD](docs/arquitetura.md)
 - [Modelo de dados (DER atualizado)](docs/modelo-de-dados.md)
 - [Tratativas de dados](docs/tratativas-de-dados.md): cada tratamento aplicado às leituras e a definição dos indicadores
+- [Usuários de demonstração](docs/usuarios.md): contas, senhas e perfis do protótipo de login
 
 ## Início rápido
 
 ```bash
 mysql -u root -p < database/01_criar_banco_e_usuario.local.sql   # uma vez
-./rodar.sh 10.12.22.92                                             # IP atual da API → http://localhost:5080
+./rodar.sh 10.82.175.92                                            # IP atual da API → http://localhost:5080
 ```
